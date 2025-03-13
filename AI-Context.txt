@@ -1,0 +1,8 @@
+context is for the development of the WordPress plugin tiaa-wpplugin plugin source is at this directory:
+    /Users/leg/DProjects/wp/shared/wp-test-html/wp-content/plugins/tiaa-wpplugin
+
+this plugin is an interface between wordpress and a Discourse server. Primary functionality so far is to take input from an Elementor Pro and submit an API call to an instance of Discourse with several options available to change how this is done. We are also looking to add a welcome feature to allow members to be sent a welcome message.
+
+ Code style is OO PHP in the manner of WordPress as well as style of JS and CSS in WordPress.
+
+    For docblocks on each file, the name (author)to use is "Lew Grothe, TIAA Admin Platform sub-team" the email address is "info@tiaa-forum.org" and the url (link) )to use is "https://tiaa-forum.org/contact"

@@ -1,0 +1,27 @@
+{
+  "name": "vendor_name/tiaa-wpplugin",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "leg",
+      "email": "lewgrothe@gmail.com"
+    }
+  ],
+  "require": {
+    "analog/analog": "^1.0"
+  },
+  "extra": {
+    "php-prefixer": {
+      "project-name": "Logging and other libraries for TIAA WordPress plugin",
+      "namespaces-prefix": "TIAAPlugin",
+      "global-scope-prefix": "TIAAPlugin_",
+
+      "exclude-paths": [
+        "ci.yml",
+        "analog/analog/LICENSE"
+      ]
+    }
+  }
+}

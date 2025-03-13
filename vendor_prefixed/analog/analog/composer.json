@@ -1,0 +1,27 @@
+{
+	"name": "analog/analog",
+	"type": "library",
+	"description": "Fast, flexible, easy PSR-3-compatible PHP logging package with dozens of handlers.",
+	"keywords": ["log", "logs", "logging", "logger", "error", "errors", "debug", "debugging", "alerts", "monitor", "monitoring", "syslog", "gelf", "amon", "psr-3", "psr3", "stderr", "console", "firephp", "chrome-logger", "apprise"],
+	"homepage": "https://github.com/jbroadway/analog",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Johnny Broadway",
+			"email": "johnny@johnnybroadway.com",
+			"homepage": "http://www.johnnybroadway.com/"
+		}
+	],
+	"require": {
+		"psr/log": "^3.0",
+		"php": ">=7.2"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^8.5"
+	},
+	"autoload": {
+		"psr-0": {
+			"Analog": "lib/"
+		}
+	}
+}

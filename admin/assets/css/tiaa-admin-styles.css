@@ -1,0 +1,129 @@
+/**
+ * Admin CSS Styles for TIAA WP Plugin
+ *
+ * Contains styles used across various admin screens of the TIAA WP Plugin.
+ * This file includes styles for:
+ * - Options page layout.
+ * - Admin connection page ping result management.
+ * - Screened email section styling.
+ * - Welcome section display and layout.
+ * - General form table adjustments.
+ *
+ * @package TIAA_WPPlugin
+ */
+
+.tiaa-wpplugin-logo {
+    width: 34px;
+    height: 36px;
+    vertical-align: bottom;
+}
+ /*
+ wrap of options form tab
+ */
+.tiaa-options-page {
+    position: relative;
+}
+/*
+manage the ping results on the connections admin page
+ */
+.tiaa-ping-results {
+    /*display: inline-block;*/
+    display: none;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+/*
+manage the message display block on the settings page
+ */
+.tiaa-message-results-off {
+    display: none;
+    flex-wrap: wrap;
+    width: 60%;
+}
+
+/**
+Screened email section CSS
+ */
+#tiaaManageScreenedEmails h3 {
+    margin: 3px;
+    color: white;
+}
+#tiaaManageScreenedEmails {
+    cursor: pointer;
+    /*border: 1px solid transparent;*/
+    /*padding: 10px;*/
+    /*transition: border-color 0.3s ease-in-out;*/
+    width: 225px;
+    border-width: thin;
+    border-style: solid;
+    text-align: center;
+    border-radius: 3px;
+    border-color: #2271AF;
+    background-color: #2271B1;
+    margin: 0px;
+    margin-bottom: 20px;
+    padding: 8px;
+}
+
+#tiaaManageScreenedEmails:hover {
+    border-color: #007acc; /* Highlight color, you can choose any */
+}
+#tiaaScreenedEmailsDiv hr {
+    border-width: thick;
+}
+
+#tiaaScreenedEmailsDiv {
+    display: none;
+}
+
+/**
+ TIAA Welcome
+ */
+.tiaa-welcome-class hr {
+    border-width: 5px;
+}
+.tiaa-flex-container {
+    display: flex;
+    float: left;
+}
+.tiaa-flex-container div {
+    /*margin: 10px;*/
+    padding-right: 20px;
+}
+.form-table tr,
+.form-table td,
+.form-table th {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.form-table p {
+    line-height: .8;
+    padding-bottom: 5px;
+}
+.tiaa-ping-discourse-class,
+.tiaa-message-discourse-class {
+    margin-top: 0px;
+}
+/**
+ * Section dealing with admin input boxes
+ */
+/**
+ * get rid of spinners in number type boxes
+ */
+/* For Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* For Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/**
+ * input boxes
+ */
+.tiaa-wpplugin-options-form .regular-text {
+    text-align: left;
+}
