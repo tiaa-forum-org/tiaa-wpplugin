@@ -28,6 +28,12 @@ class WelcomeUtil {
 	use PluginUtil;
 
 	/**
+	 * allows us to have a static run_cron()
+	 *
+	 * @var null|WelcomeUtil instance
+	 */
+	 protected static ?WelcomeUtil $instance = null;
+	/**
 	 * Cron hook identifier for scheduling welcome message jobs.
 	 *
 	 * @since 0.0.3
@@ -94,10 +100,15 @@ class WelcomeUtil {
 		$this->options = self::get_options_by_group( TIAA_WELCOME_GROUP );
 
 		// Register cron jobs.
-		add_action( self::TIAA_CRON_HOOK, [ $this, 'run_cron' ] );
+		add_action( self::TIAA_CRON_HOOK, [ __CLASS__, 'static_run_cron' ] );
+		self::log_debug( 'WP Cron hook registered for welcome feature: ' . current_action() );
 
 		// Ensure the database table exists.
 		$this->create_log_table( $wpdb );
+		
+		if (self::$instance === null) {
+			self::$instance = $this;
+		}
 	}
 
 	/**
@@ -187,6 +198,22 @@ class WelcomeUtil {
 
 			return 'unscheduled';
 		}
+	}
+
+	 /**
+	 * Static method to execute the welcome cron job.
+	 *
+	 * Ensures that the singleton instance is initialized and triggers the `run_cron` method.
+	 * This method is designed to be the cron callback for the scheduled event.
+	 *
+	 * @return void
+	 * @since 0.0.3
+	 */
+	public static function static_run_cron( ): void {
+		if (self::$instance === null) {
+			self::$instance = new WelcomeUtil();
+		}
+		self::$instance->run_cron();
 	}
 
 	/**

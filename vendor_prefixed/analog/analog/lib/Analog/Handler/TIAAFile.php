@@ -1,6 +1,7 @@
 <?php
 /*
  * TODO - this file should probably be removed from the vendor directory and put in the plugin library
+ * TODO - needs to fail better if unable to open the log file
  * with links back to vendor for support
  * Same as the Analog file handler except that it uses log level names instead of
  * numbers.
@@ -36,6 +37,63 @@ class TIAAFile {
 			static $f = null;
 
 			if ($f == null) {
+				try {
+					// Attempt to open the file
+					$f = fopen($file, 'a+');
+
+					if (! $f) {
+						// Instead of throwing the error directly, use WordPress error handling
+						if (function_exists('wp_die')) {
+							wp_die(
+								__('Could not open the file ' . $file . ' for writing', 'tiaa-wpplugin'),
+								__('File Write Error', 'tiaa-wpplugin'),
+								['response' => 500, 'back_link' => true]
+							);
+						} else {
+							// Fallback for non-WP context
+							throw new \LogicException('Could not open file for writing');
+						}
+					}
+
+					register_shutdown_function(function () use ($f) {
+						if ($f != null) {
+							fclose($f);
+							$f = null;
+						}
+					});
+				} catch (\Exception $e) {
+					// Catch exception gracefully
+					error_log($e->getMessage());
+					if (function_exists('wp_die')) {
+						wp_die(
+							__('A logging failure occurred during initialization.', 'tiaa-wpplugin'),
+							__('Logging Initialization Error', 'tiaa-wpplugin'),
+							['response' => 500]
+						);
+					} else {
+						throw $e; // Rethrow if outside WordPress context
+					}
+				}
+			}
+
+			// Locking & writing logic...
+			if (! flock($f, LOCK_EX)) {
+				throw new \RuntimeException('Could not lock file');
+			}
+
+			$info['level'] = self::LOG_LEVELS[$info['level']] ??
+			                 'UNKNOWN-' . $info['level'];
+			fwrite($f, ($buffered)
+				? $info
+				: @vsprintf(\TIAAPlugin\Analog\Analog::$format, $info));
+			flock($f, LOCK_UN);
+		};
+	}
+/*	public static function init ($file) {
+		return function ($info, $buffered = false) use ($file) {
+			static $f = null;
+
+			if ($f == null) {
 				$f = fopen ($file, 'a+');
 
 				if (! $f) {
@@ -61,7 +119,7 @@ class TIAAFile {
 			flock ($f, LOCK_UN);
 		};
 
-	}
+	}*/
 
 
 

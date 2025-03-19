@@ -18,6 +18,6 @@
  * We simply alias extend the main class so that Analog is
  * available as a global class. This saves us adding
  * `use \Analog\Analog` at the top of every file,
- * or worse, typeing `\Analog\Analog::log()` everywhere.
+ * or worse, typing `\Analog\Analog::log()` everywhere.
  */
 class_alias ('\TIAAPlugin\Analog\Analog', 'Analog');

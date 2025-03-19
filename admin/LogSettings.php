@@ -13,6 +13,12 @@
  * @since 0.0.3
  */
 
+/**
+ * TODO - need to check if file is writeable before saving
+ * TODO - need something to flag file if growing too large
+ * TODO - also to download and/or read recent log
+ * TODO - move log file handler to plugin rather than vendor area
+ */
 namespace TIAAPlugin\Admin;
 
 use TIAAPlugin\Analog\Handler\TIAAFile;

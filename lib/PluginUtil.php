@@ -109,7 +109,7 @@ trait PluginUtil {
 	 * @param WP_REST_Request $request The REST API request object.
 	 * @return WP_REST_Response The server's response on success or error details on failure.
 	 */
-	public function do_ping_discourse_server(WP_REST_Request $request): WP_REST_Response {
+	public function do_ping_discourse_server(WP_REST_Request $request) : WP_REST_Response {
 		$params = $request->get_params();
 		if (empty($params) || empty($params['option_group'])) {
 			return new WP_REST_Response(
@@ -384,7 +384,7 @@ trait PluginUtil {
 	public static function log_wp_rest_response_error( string $message, WP_REST_Response|WP_Error $wp_rest_response,
 		string $function = null, string $class = null, string $line = null) : void {
 		if (is_wp_error($wp_rest_response)) {
-			self::log_wp_error(  'rest_response', $wp_rest_response,
+			self::log_wp_error(  'rest_response: '. $message, $wp_rest_response,
 				$function, $class, $line);
 			return;
 		}
@@ -398,9 +398,9 @@ trait PluginUtil {
 		$data = $wp_rest_response->get_data();
 		if (empty($data['message'])) {
 			if (!empty($data['body_response'])) {
-				$jdata = json_decode($data['body_response'], true);
-				if (isset($jdata['errors'])) {
-					$dmessage = $jdata['errors'][0];
+				$json_data = json_decode($data['body_response'], true);
+				if (isset($json_data['errors'])) {
+					$dmessage = $json_data['errors'][0];
 				} else {
 					$dmessage = 'json no message';
 				}

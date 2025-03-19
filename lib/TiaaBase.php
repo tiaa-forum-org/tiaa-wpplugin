@@ -76,6 +76,8 @@ class TiaaBase {
 			$this->hooks = new TiaaHooks();
 			$this->options = $this->get_all_options();
 			self::log_debug( "log start" );
+			// need to goose cron to run
+			new WelcomeUtil();
 		}
 	}
 }

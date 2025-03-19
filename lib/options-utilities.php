@@ -49,7 +49,8 @@ class OptionsUtilities {
 			),
 		TIAA_LOGGING_GROUP =>
 			array(
-				'file_path' => '/var/log/tiaa-wpplugin.log',
+				// TODO - bad but necessary to place log where creating file to write will not kill plugin install
+				'file_path' => '/tmp/tiaa-wpplugin.log',
 				'log_level' => 5,
 			),
 		TIAA_SCREENED_EMAIL_GROUP =>

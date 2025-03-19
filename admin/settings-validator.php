@@ -402,7 +402,7 @@ class SettingsValidator {
 	 * @return string The validated email or an empty string if invalid.
 	 */
 	public function validate_email( $input ) {
-		if ( isset( $input ) && $input != '' && strpos( $input, '@' ) !== false ) {
+		if ( isset( $input ) && $input != '' && str_contains( $input, '@' ) ) {
 			return $input;
 		}
 
@@ -436,7 +436,7 @@ class SettingsValidator {
 			$output = array_map( 'trim', explode( ',', $input ) );
 
 			foreach ( $output as $email ) {
-				if ( strpos( $email, '@' ) === false ) {
+				if ( ! str_contains( $email, '@' ) ) {
 					add_settings_error(
 						TIAA_SCREENED_EMAIL_GROUP,
 						'email',

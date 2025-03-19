@@ -4,8 +4,8 @@
  * Plugin URI: https://tiaa-forum.org/
  * Description: WordPress plugin in support of various aspects of tiaa-forum.org. Supports Invites, Welcome messages, etc,
  * Version: 0.0.3
- * Requires at least: 6.0
- * Requires PHP:      7.1.0
+ * Requires at least: 6.5
+ * Requires PHP:      8.2.0
  * Author:            Lew Grothe and TIAA Forum Admin Platform sub-team.
  * Author URI:        https://tiaa-forum.org
  * License:           GPL v2 or later
@@ -15,7 +15,7 @@
 if( !defined('ABSPATH') )
 	exit;
 
-// TODO - find (root cause) what is causing these errors
+// TODO - find (root cause) what is causing errors
 // when turned on, this creates an error
 // error_reporting(E_ALL);
 // ini_set('display_errors', 1);
