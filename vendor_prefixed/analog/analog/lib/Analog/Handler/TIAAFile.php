@@ -1,7 +1,7 @@
 <?php
 /*
  * TODO - this file should probably be removed from the vendor directory and put in the plugin library
- * TODO - needs to fail better if unable to open the log file
+ * TODO - probably would be better if handled less as a static function and more as an object
  * with links back to vendor for support
  * Same as the Analog file handler except that it uses log level names instead of
  * numbers.
@@ -39,28 +39,30 @@ class TIAAFile {
 			if ($f == null) {
 				try {
 					// Attempt to open the file
-					$f = fopen($file, 'a+');
+					if (is_writable($file)) {
+						$f = fopen( $file, 'a+' );
 
-					if (! $f) {
-						// Instead of throwing the error directly, use WordPress error handling
-						if (function_exists('wp_die')) {
-							wp_die(
-								__('Could not open the file ' . $file . ' for writing', 'tiaa-wpplugin'),
-								__('File Write Error', 'tiaa-wpplugin'),
-								['response' => 500, 'back_link' => true]
-							);
-						} else {
-							// Fallback for non-WP context
-							throw new \LogicException('Could not open file for writing');
+						if ( ! $f ) {
+							// Instead of throwing the error directly, use WordPress error handling
+							if ( function_exists( 'wp_die' ) ) {
+								wp_die(
+									__( 'Could not open the file ' . $file . ' for writing', 'tiaa-wpplugin' ),
+									__( 'File Write Error', 'tiaa-wpplugin' ),
+									[ 'response' => 500, 'back_link' => true ]
+								);
+							} else {
+								// Fallback for non-WP context
+								throw new \LogicException( 'Could not open file for writing' );
+							}
 						}
+
+						register_shutdown_function( function () use ( $f ) {
+							if ( $f != null ) {
+								fclose( $f );
+								$f = null;
+							}
+						} );
 					}
-
-					register_shutdown_function(function () use ($f) {
-						if ($f != null) {
-							fclose($f);
-							$f = null;
-						}
-					});
 				} catch (\Exception $e) {
 					// Catch exception gracefully
 					error_log($e->getMessage());
@@ -77,16 +79,18 @@ class TIAAFile {
 			}
 
 			// Locking & writing logic...
-			if (! flock($f, LOCK_EX)) {
-				throw new \RuntimeException('Could not lock file');
-			}
+			if ($f !== null) {
+				if ( ! flock( $f, LOCK_EX ) ) {
+					throw new \RuntimeException( 'Could not lock file' );
+				}
 
-			$info['level'] = self::LOG_LEVELS[$info['level']] ??
-			                 'UNKNOWN-' . $info['level'];
-			fwrite($f, ($buffered)
-				? $info
-				: @vsprintf(\TIAAPlugin\Analog\Analog::$format, $info));
-			flock($f, LOCK_UN);
+				$info['level'] = self::LOG_LEVELS[ $info['level'] ] ??
+				                 'UNKNOWN-' . $info['level'];
+				fwrite( $f, ( $buffered )
+					? $info
+					: @vsprintf( \TIAAPlugin\Analog\Analog::$format, $info ) );
+				flock( $f, LOCK_UN );
+			}
 		};
 	}
 /*	public static function init ($file) {

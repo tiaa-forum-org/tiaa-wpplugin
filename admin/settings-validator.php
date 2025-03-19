@@ -65,6 +65,7 @@ class SettingsValidator {
 		add_filter( 'tiaa_validate_email', array( $this, 'validate_email' ) );
 		add_filter( 'tiaa_validate_email_list', array( $this, 'validate_email_list' ) );
 		add_filter( 'tiaa_validate_screen_list', array( $this, 'validate_screen_list' ) );
+		add_filter( 'tiaa_validate_file_path', array( $this, 'validate_file_path' ) );
 	}
 
 	/**
@@ -78,6 +79,34 @@ class SettingsValidator {
 	 */
 	public function setup_options() : void {
 		$this->options = $this->get_all_options();
+	}
+	public function validate_file_path( string $input ) : string {
+		if ( ! isset( $input ) || $input === '' ) {
+			add_settings_error(
+				'tiaa_wpplugin_options',
+				'file_path',
+				'File path must be set.'
+			);
+		} elseif ( is_writable($input) ) {
+			return $input;
+		} else {
+			$dir = dirname($input);
+			if ( ! is_writable($dir) ) {
+				add_settings_error(
+					'tiaa_wpplugin_options',
+					'file_path',
+					'Directory (' . $dir . ')  not a writeable directory.' );
+				$input = '';
+			} else {
+				add_settings_error(
+					'tiaa_wpplugin_options',
+					'file_path',
+					'File ' . $input . ' created.',
+					'success' );
+				@fopen($input, 'w');
+			}
+		}
+		return $input;
 	}
 
 	/**
