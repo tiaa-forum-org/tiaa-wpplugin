@@ -15,12 +15,11 @@
 
 /**
  * TODO - need to check if file is writeable before saving
- * TODO - need something to flag file if growing too large
- * TODO - also to download and/or read recent log
  * TODO - move log file handler to plugin rather than vendor area
  */
 namespace TIAAPlugin\Admin;
 
+use JetBrains\PhpStorm\NoReturn;
 use TIAAPlugin\Analog\Handler\TIAAFile;
 use TIAAPlugin\lib\PluginUtil;
 
@@ -46,10 +45,10 @@ class LogSettings {
 	/**
 	 * Stores the options for log settings grouped by the logging group.
 	 *
-	 * @var array
+	 * @var ?array
 	 * @since 0.0.3
 	 */
-	protected array $log_settings_options;
+	protected static ?array $log_settings_options = null;
 
 	/**
 	 * LogSettings class constructor.
@@ -62,6 +61,8 @@ class LogSettings {
 		$this->form_helper = $form_helper;
 
 		add_action( 'admin_init', array( $this, 'register_log_settings' ) );
+		// Add action to handle the log file download request.
+		add_action( 'admin_post_download_log_file', array( __CLASS__, 'handle_download_log_file' ) );
 	}
 
 	/**
@@ -73,7 +74,7 @@ class LogSettings {
 	 * @since 0.0.3
 	 */
 	public function register_log_settings() : void {
-		$this->log_settings_options = $this->get_options_by_group( TIAA_LOGGING_GROUP );
+		self::$log_settings_options = $this->get_options_by_group( TIAA_LOGGING_GROUP );
 
 		add_settings_section(
 			'log_settings_section',
@@ -135,14 +136,14 @@ class LogSettings {
 		$this->form_helper->input(
 			'log_level',
 			TIAA_LOGGING_GROUP,
-			esc_html__( 'Log level', 'tiaa-wpplugin' ),
+			esc_html( 'Log level'),
 			'number',
 			null,
 			array( 'style' => 'width: 2em;' ,
                 'min' => 3, 'max'=> 7)
 		);
 		$log_levels = TIAAFile::LOG_LEVELS;
-		echo '<tr><th>' . esc_html__( 'Log Levels', 'tiaa-wpplugin' ) . '</th><td>';
+		echo '<tr><th>' . esc_html( 'Log Levels') . '</th><td>';
 		foreach ( $log_levels as $key => $level ) {
 			printf( '%s => %s<br>', esc_html( $key ), esc_html( $level ) );
 		}
@@ -161,10 +162,70 @@ class LogSettings {
 		$this->form_helper->input(
 			'file_path',
 			TIAA_LOGGING_GROUP,
-			esc_html__( 'File Path', 'tiaa-wpplugin' ),
+			esc_html( 'File Path'),
 			'file_path',
             null,
             array( 'style' => 'width: 25em;' )
 		);
+		/**
+		 * button to download the log file
+		 */
+		self::download_log_button();
+	}
+	/**
+	 * Renders the "Download Log File" button and nonce.
+	 *
+	 * @since 0.0.3
+	 */
+	public function download_log_button() : void {
+		$download_url = add_query_arg(
+			array(
+				'action' => 'download_log_file',
+				'_wpnonce' => wp_create_nonce( 'download_log_file' ),
+			),
+			admin_url( 'admin-post.php' )
+		);
+        ?>
+            <a href="<?php echo esc_url( $download_url ); ?>" class="button button-primary">
+				<?php echo esc_html( 'Download Log File'); ?>
+            </a>
+		<?php
+        echo "current file size: " . number_format(filesize(self::get_log_file()),0) . "<br>";
+	}
+
+	/**
+	 * Handles log file downloading securely.
+	 *
+	 * @since 0.0.3
+	 */
+	#[NoReturn] public static function handle_download_log_file() : void {
+		// Validate nonce and capability.
+		if ( ! current_user_can( 'manage_options' ) || ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'download_log_file' ) ) {
+			wp_die( esc_html( 'You are not allowed to access this file.'), 403 );
+		}
+		$file_path = self::get_log_file();
+		if ( ! file_exists( $file_path ) || ! is_readable( $file_path ) ) {
+			wp_die( esc_html( 'The log file does not exist or is not readable.'), 404 );
+		}
+
+		// Set headers and deliver the file.
+		header( 'Content-Type: text/plain' );
+		header( 'Content-Disposition: attachment; filename="' . basename( $file_path ) . '"' );
+		header( 'Content-Length: ' . filesize( $file_path ) );
+		readfile( $file_path );
+
+		// Terminate to ensure WordPress outputs nothing else.
+		exit;
+	}
+	/**
+	 *
+	 *
+	 */
+	public static function get_log_file() : string {
+		if ( self::$log_settings_options === null ) {
+			self::$log_settings_options = PluginUtil::get_options_by_group( TIAA_LOGGING_GROUP );
+		}
+
+		return ( self::$log_settings_options['file_path'] );
 	}
 }
