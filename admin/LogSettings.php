@@ -19,7 +19,6 @@
  */
 namespace TIAAPlugin\Admin;
 
-use JetBrains\PhpStorm\NoReturn;
 use TIAAPlugin\Analog\Handler\TIAAFile;
 use TIAAPlugin\lib\PluginUtil;
 
@@ -178,50 +177,37 @@ class LogSettings {
 	 * @since 0.0.3
 	 */
 	public function download_log_button() : void {
-		$download_url = add_query_arg(
-			array(
-				'action' => 'download_log_file',
-				'_wpnonce' => wp_create_nonce( 'download_log_file' ),
-			),
-			admin_url( 'admin-post.php' )
-		);
-        ?>
-            <a href="<?php echo esc_url( $download_url ); ?>" class="button button-primary">
-				<?php echo esc_html( 'Download Log File'); ?>
-            </a>
-		<?php
-        echo "current file size: " . number_format(filesize(self::get_log_file()),0) . "<br>";
+        // Create a URL for the secure_file action
+	    $download_url = add_query_arg(
+            [
+                'action'  => 'tiaa_secure_file',
+                '_wpnonce' => wp_create_nonce( 'admin_post_tiaa_secure_file' ),
+                'type'    => 'log'
+            ],
+            admin_url( 'admin-post.php' ) );
+        // Output the URL (e.g. on a download button) ?>
+        <a href="<?php echo esc_url( $download_url ); ?>"
+           class="button button-primary"
+           data-download="log">Download log </a>
+        <?php echo "current file size: " . number_format(filesize(self::get_log_file())) . "<br>";
 	}
-
-	/**
-	 * Handles log file downloading securely.
-	 *
-	 * @since 0.0.3
-	 */
-	#[NoReturn] public static function handle_download_log_file() : void {
-		// Validate nonce and capability.
-		if ( ! current_user_can( 'manage_options' ) || ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'download_log_file' ) ) {
-			wp_die( esc_html( 'You are not allowed to access this file.'), 403 );
-		}
-		$file_path = self::get_log_file();
-		if ( ! file_exists( $file_path ) || ! is_readable( $file_path ) ) {
-			wp_die( esc_html( 'The log file does not exist or is not readable.'), 404 );
-		}
-
-		// Set headers and deliver the file.
-		header( 'Content-Type: text/plain' );
-		header( 'Content-Disposition: attachment; filename="' . basename( $file_path ) . '"' );
-		header( 'Content-Length: ' . filesize( $file_path ) );
-		readfile( $file_path );
-
-		// Terminate to ensure WordPress outputs nothing else.
-		exit;
-	}
-	/**
-	 *
-	 *
-	 */
-	public static function get_log_file() : string {
+  /**
+   * Retrieves the file path for the log file based on current log settings.
+   *
+   * This method accesses the configuration options for the logging feature
+   * (from the `TIAA_LOGGING_GROUP` settings group) and retrieves the file path
+   * where log data is stored. The result is cached during the method execution
+   * for improved performance.
+   *
+   * Usage:
+   * - Typically used to obtain the log file path for reading, downloading, or
+   *   processing logs in the plugin.
+   *
+   * @since 0.0.3
+   *
+   * @return string The path to the log file as configured in the plugin settings.
+   */
+    public static function get_log_file() : string {
 		if ( self::$log_settings_options === null ) {
 			self::$log_settings_options = PluginUtil::get_options_by_group( TIAA_LOGGING_GROUP );
 		}

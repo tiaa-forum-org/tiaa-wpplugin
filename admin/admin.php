@@ -28,6 +28,7 @@ if ( is_admin() ) {
 	require_once __DIR__ . '/ScreenedEmailsHandler.php';
 	require_once __DIR__ . '/WelcomeSettings.php';
 	require_once __DIR__ . '/WelcomeDataHandler.php';
+	require_once __DIR__ . '/GeneralFileHandler.php';
 
 	// Initialize key components for the admin interface.
 	$form_helper  = FormHelper::get_instance();
@@ -44,6 +45,8 @@ if ( is_admin() ) {
 
 	// Enqueue admin-specific scripts and styles.
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\tiaa_enqueue_admin_scripts' );
+	// Add handler to download files for authorized users.
+	add_action( 'admin_post_tiaa_secure_file', [ GeneralFileHandler::class, 'tiaa_serve_file' ]);
 } // End if ( is_admin() )
 
 /**
@@ -54,7 +57,7 @@ if ( is_admin() ) {
  * @since 0.0.3
  * @return void
  */
-function tiaa_enqueue_admin_scripts() {
+function tiaa_enqueue_admin_scripts() : void {
 	// Define the path to the admin CSS file.
 	$style_path = '/assets/css/tiaa-admin-styles.css';
 
@@ -69,7 +72,6 @@ function tiaa_enqueue_admin_scripts() {
 
 	// Define the path to the admin JavaScript file.
 	$script_path = '/assets/js/tiaa-admin.js';
-
 	// Register and enqueue the admin JavaScript file with dependencies.
 	wp_register_script(
 		'tiaa_admin_js',
@@ -79,4 +81,16 @@ function tiaa_enqueue_admin_scripts() {
 		true
 	);
 	wp_enqueue_script( 'tiaa_admin_js' );
+
+	// Define the path to the file download JavaScript file.
+	$script_path = '/assets/js/fetchWithProgress.js';
+	wp_register_script(
+		'tiaa_admin_js2',
+		plugins_url( $script_path, __FILE__ ),
+		array( 'tags-box' ),
+		filemtime( plugin_dir_path( __FILE__ ) . $script_path ),
+		true
+	);
+	wp_enqueue_script( 'tiaa_admin_js2' );
+
 }

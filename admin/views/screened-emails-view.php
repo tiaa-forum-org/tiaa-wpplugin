@@ -60,39 +60,22 @@
 			);
 			?>
         </form>
-
         <hr>
-
-        <!-- Export CSV Form -->
-        <div class="wrap">
-            <form method="post" action="">
-                <!-- Security nonce for validation -->
-				<?php wp_nonce_field('export_emails_csv', '_wpnonce_export_csv'); ?>
-
-                <!-- File Name Input -->
-                <label for="export_file_name">
-					<?php esc_html_e('Enter File Name (CSV)', 'tiaa-plugin'); ?>
-                </label>
-                <input type="text" name="export_file_name" id="export_file_name" />
-
-                <label for="column_labels">
-					<?php esc_html_e('Include Column Labels', 'tiaa-plugin'); ?>
-                </label>
-                <input type="checkbox" name="column_labels" value="on" />
-
-				<?php
-				submit_button(
-					'Export CSV',
-					'primary',
-					'export_csv',
-					false,
-					array('class' => 'button primary-button')
-				);
-				?>
-            </form>
-        </div>
+	<?php // Create a URL for the secure_file action
+	$download_url = add_query_arg(
+		[
+			'action'  => 'tiaa_secure_file',
+			'_wpnonce' => wp_create_nonce( 'admin_post_tiaa_secure_file' ),
+			'type'    => 'csv',
+			'table'   => 'tiaa_screened_emails',
+		],
+		admin_url( 'admin-post.php' )
+	);
+	// Output the URL (e.g. on a download button) ?>
+    <a href="<?php echo esc_url( $download_url ); ?>"
+       class="button button-primary"
+       data-download="csv">Download CSV</a>
         <hr>
-
         <!-- Display Emails Table -->
         <table class="wp-list-table widefat fixed striped table-view-list" style="width: 80vw;">
             <colgroup>

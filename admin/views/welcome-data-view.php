@@ -58,6 +58,21 @@ if (!isset($this) || !isset($this->Util) || !method_exists($this->Util, 'get_rec
     </div>
 
     <hr>
+	<?php // Create a URL for the secure_file action
+	$download_url = add_query_arg(
+		[
+			'action'  => 'tiaa_secure_file',
+			'_wpnonce' => wp_create_nonce( 'admin_post_tiaa_secure_file' ),
+			'type'    => 'csv',
+			'table'   => 'tiaa_welcome_log',
+		],
+		admin_url( 'admin-post.php' )
+	);
+	// Output the URL (e.g. on a download button) ?>
+    <a href="<?php echo esc_url( $download_url ); ?>"
+       class="button button-primary"
+       data-download="csv">Download CSV</a>
+    <hr>
 
     <!-- Log entries table -->
 	<?php
