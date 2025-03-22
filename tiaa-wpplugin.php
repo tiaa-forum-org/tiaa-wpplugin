@@ -15,10 +15,8 @@
 if( !defined('ABSPATH') )
 	exit;
 
-// TODO - find (root cause) what is causing errors
-// when turned on, this creates an error
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 define('TIAA_PLUGIN_PATH', plugin_dir_path( __FILE__ ));
 define('TIAA_PLUGIN_URL', plugin_dir_url( __FILE__ ));
