@@ -229,7 +229,7 @@ class WelcomeUtil {
 
 		$min_days        = $this->options['days_since_joined_min'];
 		$max_days        = $this->options['days_since_joined_max'];
-		$welcome_post_id = $this->options['welcome_post_id'];
+		$post_id = $this->options['post_id'];
 		$group_list      = $this->options['group_list'];
 		// Fetch recent members from Discourse API
 		$recent_members = Discourse::get_recent_members( $max_days );
@@ -241,7 +241,7 @@ class WelcomeUtil {
 			self::log_debug( 'Found ' . count( $recent_members ) . ' recent members.' );
 		}
 
-		$result = Discourse::get_discourse_post_by_id( $welcome_post_id, TIAA_WELCOME_GROUP );
+		$result = Discourse::get_discourse_post_by_id( $post_id, TIAA_WELCOME_GROUP );
 		if ( is_wp_error( $result ) || $result->get_status() !== 200 ) {
 			self::log_wp_rest_response_error( 'Getting welcome post: ', $result,
 				__FUNCTION__, __CLASS__, __LINE__ );
@@ -252,7 +252,7 @@ class WelcomeUtil {
 		$xdata   = json_decode( $data['body_response'], true );
 		$message = self::parse_message( $xdata['raw'] );
 		if ( ! $message ) {
-			self::log_error( 'No welcome post found - post_id:' . $welcome_post_id );
+			self::log_error( 'No welcome post found - post_id:' . $post_id );
 
 			return;
 		}

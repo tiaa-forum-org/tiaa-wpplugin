@@ -180,7 +180,7 @@ class WelcomeSettings {
 		add_settings_field(
 			'post_id',
 			'Welcome Post ID',
-			[$this, 'render_welcome_post_id_field'],
+			[$this, 'render_post_id_field'],
 			TIAA_WELCOME_GROUP,
 			'welcome_settings_section'
 		);
@@ -382,7 +382,7 @@ class WelcomeSettings {
 	 * @since 0.0.3
 	 * @return void
 	 */
-	public function render_welcome_post_id_field(): void {
+	public function render_post_id_field(): void {
 		$this->form_helper->input(
 			'post_id',
 			TIAA_WELCOME_GROUP,
