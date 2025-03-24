@@ -330,7 +330,7 @@ class SettingsValidator {
 				add_settings_error( 'tiaa_options_page', $option_id, $error_message );
 			}
 
-			return '';
+			return 0;
 		}
 
 		return $input;

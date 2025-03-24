@@ -154,9 +154,11 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 */
 	public function schedule_cron(): void {
-		self::log_debug( 'Scheduling welcome cron job for every hour...' );
+		$scan_rate = $this->options['scan_rate'];
+		self::log_debug( "Scheduling welcome cron job for $scan_rate  hours..." );
 		if ( ! wp_next_scheduled( self::TIAA_CRON_HOOK ) ) {
-			$start_time = strtotime( '+1 hour', time() );
+            $format_time = '+' . $scan_rate . ' hours';
+			$start_time = strtotime( $format_time, time() );
 			$start_time = strtotime( date( 'Y-m-d H:00:00', $start_time ) ); // Round to the next hour.
 			wp_schedule_event( $start_time, 'hourly', self::TIAA_CRON_HOOK );
 		}
@@ -231,6 +233,7 @@ class WelcomeUtil {
 		$max_days        = $this->options['days_since_joined_max'];
 		$post_id = $this->options['post_id'];
 		$group_list      = $this->options['group_list'];
+		self::log_debug( 'Running welcome cron- > min days:' . $min_days . ' max days:' . $max_days  );
 		// Fetch recent members from Discourse API
 		$recent_members = Discourse::get_recent_members( $max_days );
 		if ( ! $recent_members ) {

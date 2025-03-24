@@ -169,6 +169,7 @@ class TiaaHooks {
 					$option_group = TIAA_INVITE_GROUP;
 				} else {
 					$req_data['group_names'] = $data['group'];
+					// if it's not a valid group, get_connection_options...() will fail
 					$option_group = TIAA_GROUP_INVITE_GROUP . strtolower($data['group']);
 				}
 			} else {

@@ -72,7 +72,6 @@ function fetchPingResults(ref, event) {
         })
         .catch((error) => {
             console.log(error.message);
-            // TODO - add something meaningful to the user...
         });
 }
 
@@ -92,10 +91,13 @@ function fetchMessage(ref, event) {
                     let message = getMessageFromPost(payload['cooked']);
                     if (message.length < 10) {
                         divResults.style.color = 'red';
-                        divResults.innerHTML = "Post doesn't contain 'Begin Message ----' tag at start of message.<br>" +
-                            payload['cooked']
-                        ;
-
+                        divResults.innerHTML =
+                            "Post doesn't contain 'Begin Message ----' tag at start of message.<br>";
+                        if (payload['cooked'].length > 200) {
+                            divResults.innerHTML += payload['cooked'].substring(0, 200) + '<br>...';
+                        } else {
+                            divResults.innerHTML += payload['cooked'] + '<br>';
+                        }
                     } else {
                         divResults.style.color = 'green';
                         console.log(message);
@@ -118,7 +120,6 @@ function fetchMessage(ref, event) {
         })
         .catch((error) => {
             console.log(error.message);
-            // TODO - add something meaningful to the user...
         });
 }
 function getMessageFromPost(post) {
@@ -127,7 +128,7 @@ function getMessageFromPost(post) {
         return '';
     }
     const beginRegX = /\nBeginMessage ----<br>\n/;
-    startIndex = post.search(beginRegX);
+    let startIndex = post.search(beginRegX);
     if (startIndex > 0){
         let message = '<p>' + post.substring(startIndex + (beginRegX.toString().length - 4));
         return(message);
