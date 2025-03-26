@@ -33,6 +33,7 @@ const TIAA_INVITE_GROUP  = TIAA_WP_OPTION_PREFIX . 'invite';
 const TIAA_GROUP_LIST_GROUP = TIAA_WP_OPTION_PREFIX . 'groups';
 const TIAA_GROUP_INVITE_GROUP = TIAA_WP_OPTION_PREFIX . 'group-invite-'; // will have '-group_name' suffix
 const TIAA_WELCOME_GROUP = TIAA_WP_OPTION_PREFIX . 'welcome';
+const TIAA_WELCOME_GROUP_CRON = TIAA_WELCOME_GROUP . '_cron';
 const TIAA_LOGGING_GROUP = TIAA_WP_OPTION_PREFIX . 'logging';
 const TIAA_SCREENED_EMAIL_GROUP = TIAA_WP_OPTION_PREFIX . 'screened-emails';
 

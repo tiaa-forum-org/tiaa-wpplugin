@@ -70,7 +70,7 @@ class OptionsUtilities {
 				'days_since_joined_min'  => 7,
 				'days_since_joined_max'  => 30,
 				'post_id'                => 19,
-				'welcome_post_title'     => 'Welcome to the TIAA Forum',
+				'message_title'     => 'Welcome to the TIAA Forum',
 				'group_list'             => [], // List of excluded groups
 			),
 	);

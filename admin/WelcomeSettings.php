@@ -193,6 +193,8 @@ class WelcomeSettings {
 				'validate_options', // Note: Known bug described in README-known-bugs.md.
 			)
 		);
+        // if option already exists, it will not change the value
+        add_option( TIAA_WELCOME_GROUP_CRON, true );
 	}
 
 	/**

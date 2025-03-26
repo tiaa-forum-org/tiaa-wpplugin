@@ -93,19 +93,20 @@ class WelcomeUtil {
 	 */
 	public function __construct() {
 		global $wpdb;
-		$this->wpdb       = $wpdb;
-		$this->table_name = $this->wpdb->prefix . self::TIAA_WELCOME_TABLE;
+			$this->wpdb       = $wpdb;
+			$this->table_name = $this->wpdb->prefix . self::TIAA_WELCOME_TABLE;
 
-		// Fetch settings options.
-		$this->options = self::get_options_by_group( TIAA_WELCOME_GROUP );
+			// Fetch settings options.
+			$this->options = self::get_options_by_group( TIAA_WELCOME_GROUP );
 
-		// Register cron jobs.
-		add_action( self::TIAA_CRON_HOOK, [ __CLASS__, 'static_run_cron' ] );
-		self::log_debug( 'WP Cron hook registered for welcome feature: ' . current_action() );
-
-		// Ensure the database table exists.
-		$this->create_log_table( $wpdb );
-		
+			// Register cron job.
+			$next_run = wp_next_scheduled( self::TIAA_CRON_HOOK );
+			if ( ! $next_run &&  get_option( TIAA_WELCOME_GROUP_CRON ) ) {
+				add_action( self::TIAA_CRON_HOOK, [ __CLASS__, 'static_run_cron' ] );
+				self::log_debug( 'WP Cron hook registered for welcome feature: ' . current_action() );
+			}
+			// Ensure the database table exists.
+			$this->create_log_table( $wpdb );
 		if (self::$instance === null) {
 			self::$instance = $this;
 		}
@@ -138,7 +139,7 @@ class WelcomeUtil {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$result = dbDelta( $sql );
 
-		if ( false === $result ) {
+		if ( strlen($wpdb->last_error) > 2 ) {
 			error_log( 'Table creation failed: ' . $wpdb->last_error );
 		}
 
@@ -162,6 +163,7 @@ class WelcomeUtil {
 			$start_time = strtotime( date( 'Y-m-d H:00:00', $start_time ) ); // Round to the next hour.
 			wp_schedule_event( $start_time, 'hourly', self::TIAA_CRON_HOOK );
 		}
+		self::enable_cron();
 	}
 
 	/**
@@ -177,6 +179,7 @@ class WelcomeUtil {
 		if ( $timestamp ) {
 			wp_unschedule_event( $timestamp, self::TIAA_CRON_HOOK );
 		}
+		self::disable_cron();
 	}
 
 	/**
@@ -313,7 +316,12 @@ class WelcomeUtil {
 		}
 		self::log_debug( 'Finished welcome cron job.' );
 	}
-
+	private function enable_cron() : void {
+		update_option( TIAA_WELCOME_GROUP_CRON, true );
+	}
+	private function disable_cron() : void {
+		update_option( TIAA_WELCOME_GROUP_CRON, false );
+	}
 	/**
 	 * Helper to determine if a member's date is within the range.
 	 *
@@ -448,6 +456,9 @@ class WelcomeUtil {
 	 */
 	public function get_recent_log_entries( int $limit ) : ?array {
 		// Query the database table for the latest entries.
+		if ( $this === null ) {
+			return null;
+		}
 		$query = $this->wpdb->prepare(
 			"SELECT member_id, username, email, group_name, date_created, date_processed, status 
         FROM {$this->table_name}
