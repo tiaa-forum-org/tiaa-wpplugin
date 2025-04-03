@@ -224,7 +224,7 @@ class TiaaHooks {
 			array(
 				'methods'              => 'GET',
 				'permission_callback'  => '__return_true',
-				'callback'             => array( $this, 'do_get_discourse_post' ),
+				'callback'             => array( $this, 'get_discourse_post_by_id' ),
 				'args'                 => array(
 					'post_id'      => array(
 						'validate_callback' => function( $param, $request, $key ) {

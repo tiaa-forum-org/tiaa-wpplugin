@@ -40,14 +40,14 @@ trait PluginUtil {
 	 *
 	 * @var mixed
 	 */
-	private static $log_options;
+	private static array $log_options;
 
 	/**
 	 * Static property to define the log level.
 	 *
 	 * @var mixed
 	 */
-	private static $log_level;
+	private static int $log_level;
 
 	/**
 	 * Returns a single array of options from a given array of arrays.
@@ -160,13 +160,12 @@ trait PluginUtil {
 	 * @param WP_REST_Request $request The REST API request object containing post ID and option group.
 	 * @return string|WP_Error|WP_REST_Response|array The server's response, post content, or an error.
 	 */
-	public function do_get_discourse_post(WP_REST_Request $request): string|WP_Error|WP_REST_Response|array {
+	public function get_discourse_post_by_id(WP_REST_Request $request): string|WP_Error|WP_REST_Response|array {
 		$params = $request->get_params();
 		$post_id = $params['post_id'];
 		$option_group = $params['option_group'];
 
-		$results = Discourse::get_discourse_post_by_id($post_id, $option_group);
-		return $results;
+		return Discourse::get_discourse_post_by_id($post_id, $option_group);
 	}
 
 	/**
@@ -360,7 +359,7 @@ trait PluginUtil {
 	 * @return void
 	 */
 	public static function log_wp_error( string $message, WP_Error $wp_error,
-		string $function = null, string $class = null, string $line = null) : void {
+		?string $function = null, ?string $class = null, ?string $line = null) : void {
 		$out = $message;
 		if ($function != null ) {
 			$out .= ' in ';
@@ -382,7 +381,7 @@ trait PluginUtil {
 	 * @return void
 	 */
 	public static function log_wp_rest_response_error( string $message, WP_REST_Response|WP_Error $wp_rest_response,
-		string $function = null, string $class = null, string $line = null) : void {
+		?string $function = null, ?string $class = null, ?string $line = null) : void {
 		if (is_wp_error($wp_rest_response)) {
 			self::log_wp_error(  'rest_response: '. $message, $wp_rest_response,
 				$function, $class, $line);
@@ -415,7 +414,7 @@ trait PluginUtil {
 	}
 
 	/**
-	 * used to provide useful information for debugging
+	 * used to provide useful information for debugging (logging)
 	 *
 	 * @param array $array_val
 	 *

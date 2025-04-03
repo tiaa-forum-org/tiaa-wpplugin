@@ -39,7 +39,7 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 * @var string
 	 */
-	const TIAA_CRON_HOOK = 'tiaa_wp_welcome_cron_hook';
+	const string TIAA_CRON_HOOK = 'tiaa_wp_welcome_cron_hook';
 
 	/**
 	 * The table name for storing welcome message logs.
@@ -47,7 +47,7 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 * @var string
 	 */
-	const TIAA_WELCOME_TABLE = 'tiaa_welcome_log';
+	const string TIAA_WELCOME_TABLE = 'tiaa_welcome_log';
 
 	/**
 	 * The WordPress database instance.
@@ -443,9 +443,10 @@ class WelcomeUtil {
 	 * Queries the database for the latest entries in the `tiaa_welcome_log`
 	 * table, ordered by processing date.
 	 *
-	 *  This function is directly called in a PHP template file and may not
-	 *  appear as "used" in some IDEs due to the dynamic nature of template inclusion.
-	 *  Ensure to update both the logic here and any relevant template if changes are made.
+	 * This method is specifically called from the PHP template file
+	 * `admin/views/welcome-data-view.php`.
+	 * Ensure that changes to the logic here are reflected in that template
+	 * and any related functionality.
 	 *
 	 * @param int $limit The maximum number of entries to retrieve.
 	 *
@@ -468,9 +469,6 @@ class WelcomeUtil {
 		);
 
 		// Execute the SQL and fetch results.
-		$results = $this->wpdb->get_results( $query );
-
-		// Return results.
-		return $results;
+		return $this->wpdb->get_results( $query );
 	}
 }
