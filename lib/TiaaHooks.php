@@ -133,7 +133,7 @@ class TiaaHooks {
 					$data[ $key ] = $value;
 				}
 			}
-			self::log_debug("got invite_to_discourse1: " . self::array_to_string($data) );
+			self::log_debug("got invite_to_discourse1: " . self:: array_to_string($data) );
 		} else {
 			// Handle form-encoded body
 			$data = $request->get_body_params();

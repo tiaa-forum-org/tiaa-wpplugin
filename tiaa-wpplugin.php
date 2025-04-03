@@ -49,7 +49,7 @@ require_once TIAA_PLUGIN_PATH . 'lib/PluginUtil.php';
 require_once TIAA_PLUGIN_PATH . 'lib/Discourse.php';
 // require_once TIAA_PLUGIN_PATH . 'lib/utilities.php';
 require_once TIAA_PLUGIN_PATH . 'lib/TiaaBase.php';
-require_once TIAA_PLUGIN_PATH . 'lib/tiaa-hooks.php';
+require_once TIAA_PLUGIN_PATH . 'lib/TiaaHooks.php';
 require_once TIAA_PLUGIN_PATH . 'lib/ScreenEmailsUtil.php';
 require_once TIAA_PLUGIN_PATH . 'lib/WelcomeUtil.php';
 
