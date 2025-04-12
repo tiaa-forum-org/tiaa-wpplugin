@@ -235,14 +235,7 @@ trait PluginUtil {
 		if (self::$log_initialized === true) {
 			return true;
 		}
-		self::$log_options = self::get_options_by_group(TIAA_LOGGING_GROUP);
-		self::$log_level = self::$log_options['log_level'];
-		$logfile = self::$log_options['file_path'];
-		Analog::handler(\TIAAPlugin\Analog\Handler\TIAAFile::init($logfile));
-		Analog::$format = "%2\$s: %3\$s - %4\$s\n";
-		Analog::$date_format = 'Y-m-d H:i:s';
-		Analog::$timezone = 'America/Denver';
-		self::$log_initialized = true;
+		self::my_log_level(); // also initializes log if not
 
 		return true;
 	}
@@ -305,7 +298,7 @@ trait PluginUtil {
 	 * @return void
 	 */
 	public static function warning( $message): void {
-		if (self::$log_level <= Analog::WARNING && self::is_log_initialized()) {
+		if (self::my_log_level() <= Analog::WARNING && self::is_log_initialized()) {
 			Analog::warning($message);
 		}
 	}
@@ -316,7 +309,7 @@ trait PluginUtil {
 	 * @return void
 	 */
 	public static function log_notice(string $message): void {
-		if (self::$log_level <= Analog::NOTICE && self::is_log_initialized()) {
+		if (self::my_log_level() <= Analog::NOTICE && self::is_log_initialized()) {
 			Analog::notice($message);
 		}
 	}
@@ -329,7 +322,7 @@ trait PluginUtil {
 	 * @return void
 	 */
 	public static function log_info( $message): void {
-		if (self::$log_level <= Analog::INFO && self::is_log_initialized()) {
+		if (self::my_log_level() <= Analog::INFO && self::is_log_initialized()) {
 			Analog::info($message);
 		}
 	}
@@ -342,10 +335,24 @@ trait PluginUtil {
 	 * @return void
 	 */
 	public static function log_debug($message): void {
-		if (self::$log_level <= Analog::DEBUG && self::is_log_initialized()) {
+		if (self::my_log_level() <= Analog::DEBUG && self::is_log_initialized()) {
 			Analog::debug($message);
 		}
 	}
+
+	private static function my_log_level() : int {
+		if (empty(self::$log_level))  {
+			self::$log_options = self::get_options_by_group(TIAA_LOGGING_GROUP);
+			self::$log_level = self::$log_options['log_level'];
+			$logfile = self::$log_options['file_path'];
+			Analog::handler(\TIAAPlugin\Analog\Handler\TIAAFile::init($logfile));
+			Analog::$format = "%2\$s: %3\$s - %4\$s\n";
+			Analog::$date_format = 'Y-m-d H:i:s';
+			Analog::$timezone = 'America/Denver';
+			self::$log_initialized = true;
+		}
+		return self::$log_level;
+     }
 
 	/**
 	 * Logs an error with details from WP_Error info
