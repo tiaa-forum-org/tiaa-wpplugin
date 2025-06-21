@@ -14,7 +14,7 @@
 namespace TIAAPlugin\Admin;
 
 use TIAAPlugin\lib\PluginUtil;
-use TIAAPlugin\admin\ScreenedEmailsHandler;
+// use TIAAPlugin\admin\ScreenedEmailsHandler;
 
 /**
  * Class OptionsPage
@@ -63,7 +63,7 @@ class OptionsPage {
 	 *
 	 * @return OptionsPage An instance of the OptionsPage class.
 	 */
-	public static function get_instance() {
+	public static function get_instance(): OptionsPage {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
@@ -88,13 +88,14 @@ class OptionsPage {
 	 * Handles the display of settings and navigation tabs in the admin interface.
 	 * Dynamically renders settings pages based on the active or selected tab.
 	 *
-	 * @since 0.0.3
-	 *
 	 * @param string      $active_tab The current tab; defaults to connection tab if `$_GET['tab']` is not set.
-	 * @param null|string $parent_tab Optional parent tab. Useful for hierarchical menu structure.
-	 * @param bool        $form Whether to render a settings form on the page. Defaults to true.
+	 * @param string|null $parent_tab Optional parent tab. Useful for hierarchical menu structure.
+	 * @param bool $form Whether to render a settings form on the page. Defaults to true.
+	 *
+	 *@since 0.0.3
+	 *
 	 */
-	public function display( $active_tab = '', $parent_tab = null, $form = true ) {
+	public function display( string $active_tab = '', string $parent_tab = null, bool $form = true ): void {
 		?>
         <div class="wrap tiaa-options-page">
             <h2>
@@ -205,24 +206,23 @@ class OptionsPage {
                     </form>
             <?php
                     $group_list = $this->get_options_by_group(TIAA_GROUP_LIST_GROUP);
-                    if ($group_list) {
-                        foreach ($group_list as $group_array) {
-	                        foreach( $group_array as $group) {
-		                        echo '<hr><h3>Group: ' . $group . '</h3>';
-                                $option_group = TIAA_GROUP_INVITE_GROUP . $group;
-                                ?>
-                                <form action="options.php" method="post" class="tiaa-wpplugin-options-form">
-                                    <?php
-                                settings_fields( $option_group );
-                                	do_settings_sections( $option_group );
-                                    submit_button( 'Save Options', 'primary', 'tiaa_save_options', false );
+                    if ($group_list && is_array($group_list)) {
+                            foreach ($group_list as $group_array) {
+                                foreach( $group_array as $group) {
+                                    echo '<hr><h3>Group: ' . $group . '</h3>';
+                                    $option_group = TIAA_GROUP_INVITE_GROUP . $group;
                                     ?>
-                                </form>
-		                        <?php
-	                        }
+                                    <form action="options.php" method="post" class="tiaa-wpplugin-options-form">
+                                        <?php
+                                    settings_fields( $option_group );
+                                        do_settings_sections( $option_group );
+                                        submit_button( 'Save Options', 'primary', 'tiaa_save_options', false );
+                                        ?>
+                                    </form>
+                                    <?php
+                                }
+                            }
                         }
-                    }
-
                 } // if ( 'group-signup' === $tab )
 ?>
 			<?php endif; // if ($form) ?>
@@ -230,5 +230,4 @@ class OptionsPage {
         </div>
 		<?php
 	}
-
 }
