@@ -39,7 +39,7 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 * @var string
 	 */
-	const string TIAA_CRON_HOOK = 'tiaa_wp_welcome_cron_hook';
+	const  TIAA_CRON_HOOK = 'tiaa_wp_welcome_cron_hook';
 
 	/**
 	 * The table name for storing welcome message logs.
@@ -47,7 +47,7 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 * @var string
 	 */
-	const string TIAA_WELCOME_TABLE = 'tiaa_welcome_log';
+	const  TIAA_WELCOME_TABLE = 'tiaa_welcome_log';
 
 	/**
 	 * The WordPress database instance.
@@ -156,12 +156,12 @@ class WelcomeUtil {
 	 */
 	public function schedule_cron(): void {
 		$scan_rate = $this->options['scan_rate'];
-		self::log_debug( "Scheduling welcome cron job for $scan_rate  hours..." );
+		self::log_debug( "Scheduling welcome cron job for $scan_rate  days..." );
 		if ( ! wp_next_scheduled( self::TIAA_CRON_HOOK ) ) {
-            $format_time = '+' . $scan_rate . ' hours';
+            $format_time = '+' . $scan_rate . ' days';
 			$start_time = strtotime( $format_time, time() );
 			$start_time = strtotime( date( 'Y-m-d H:00:00', $start_time ) ); // Round to the next hour.
-			wp_schedule_event( $start_time, 'hourly', self::TIAA_CRON_HOOK );
+			wp_schedule_event( $start_time, 'daily', self::TIAA_CRON_HOOK );
 		}
 		self::enable_cron();
 	}
