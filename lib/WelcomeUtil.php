@@ -101,7 +101,8 @@ class WelcomeUtil {
 
 			// Register cron job.
 			$next_run = wp_next_scheduled( self::TIAA_CRON_HOOK );
-			if ( ! $next_run &&  get_option( TIAA_WELCOME_GROUP_CRON ) ) {
+			$tiaa_welcome_cron_status = get_option( TIAA_WELCOME_GROUP_CRON );
+			if ( ! $next_run && $tiaa_welcome_cron_status === 'true'  ) {
 				add_action( self::TIAA_CRON_HOOK, [ __CLASS__, 'static_run_cron' ] );
 				self::log_debug( 'WP Cron hook registered for welcome feature: ' . current_action() );
 			}
