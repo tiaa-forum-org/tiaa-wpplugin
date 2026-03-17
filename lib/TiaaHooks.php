@@ -170,7 +170,8 @@ class TiaaHooks {
 				} else {
 					$req_data['group_names'] = $data['group'];
 					// if it's not a valid group, get_connection_options...() will fail
-					$option_group = TIAA_GROUP_INVITE_GROUP . strtolower($data['group']);
+					// used to be str_tolower() but discourse group slugs are case sensitive
+					$option_group = TIAA_GROUP_INVITE_GROUP . $data['group'];
 				}
 			} else {
 				$option_group = TIAA_INVITE_GROUP;
