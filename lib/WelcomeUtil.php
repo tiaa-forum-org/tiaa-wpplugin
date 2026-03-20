@@ -178,10 +178,7 @@ class WelcomeUtil {
 	 */
 	public function unschedule_cron(): void {
 		self::log_debug( 'Unscheduled welcome cron job...' );
-		$timestamp = wp_next_scheduled( self::TIAA_CRON_HOOK );
-		if ( $timestamp ) {
-			wp_unschedule_event( $timestamp, self::TIAA_CRON_HOOK );
-		}
+		wp_clear_scheduled_hook( self::TIAA_CRON_HOOK );
 		self::disable_cron();
 	}
 
@@ -218,6 +215,8 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 */
 	public static function static_run_cron( ): void {
+		// Guard for direct invocation (e.g. WP-CLI) where the constructor
+		// may not have run on this page load.
 		if (self::$instance === null) {
 			self::$instance = new WelcomeUtil();
 		}
