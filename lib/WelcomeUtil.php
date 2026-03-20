@@ -93,21 +93,23 @@ class WelcomeUtil {
 	 */
 	public function __construct() {
 		global $wpdb;
-			$this->wpdb       = $wpdb;
-			$this->table_name = $this->wpdb->prefix . self::TIAA_WELCOME_TABLE;
+		$this->wpdb       = $wpdb;
+		$this->table_name = $this->wpdb->prefix . self::TIAA_WELCOME_TABLE;
 
-			// Fetch settings options.
-			$this->options = self::get_options_by_group( TIAA_WELCOME_GROUP );
+		// Fetch settings options.
+		$this->options = self::get_options_by_group( TIAA_WELCOME_GROUP );
+		// Bug 1 Fixed: ALWAYS register the action on every page load,
+		// unconditionally — registration is not the same as scheduling.
+		add_action( self::TIAA_CRON_HOOK, [ __CLASS__, 'static_run_cron' ] );
 
-			// Register cron job.
-			$next_run = wp_next_scheduled( self::TIAA_CRON_HOOK );
-			$tiaa_welcome_cron_status = get_option( TIAA_WELCOME_GROUP_CRON );
-			if ( ! $next_run && $tiaa_welcome_cron_status === 'true'  ) {
-				add_action( self::TIAA_CRON_HOOK, [ __CLASS__, 'static_run_cron' ] );
-				self::log_debug( 'WP Cron hook registered for welcome feature: ' . current_action() );
-			}
-			// Ensure the database table exists.
-			$this->create_log_table( $wpdb );
+		$tiaa_welcome_cron_status = get_option( TIAA_WELCOME_GROUP_CRON );
+		$next_run = wp_next_scheduled( self::TIAA_CRON_HOOK );
+		// Bug 2 Fixed: compare bool to bool, not bool to string 'true'.
+		if ( ! $next_run && $tiaa_welcome_cron_status === true ) {
+			self::log_debug( 'WP Cron hook registered for welcome feature: ' . current_action() );
+		}
+		// Ensure the database table exists.
+		$this->create_log_table( $wpdb );
 		if (self::$instance === null) {
 			self::$instance = $this;
 		}
