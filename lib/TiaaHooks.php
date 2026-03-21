@@ -43,6 +43,7 @@ class TiaaHooks {
 	 */
 	public function __construct() {
 		add_action( 'rest_api_init', array( $this, 'initialize_hooks' ) );
+		add_filter( 'cron_schedules', array( $this, 'register_test_cron_intervals' ) );
 	}
 
 	/**
@@ -243,5 +244,36 @@ class TiaaHooks {
 			true
 		);
 		return $results;
+	}
+	/**
+	 * Registers custom WP-Cron intervals for testing purposes.
+	 *
+	 * Adds a 5-minute interval to the available WP-Cron schedules, enabling
+	 * faster feedback during local development and cron job testing.
+	 *
+	 * ⚠️  TEMPORARY — TESTING ONLY.
+	 * This function exists solely to support the 'every_five_minutes' option
+	 * in the Welcome Settings cron interval selector. It should be removed
+	 * before production deployment, along with the corresponding select option
+	 * in WelcomeSettings::render_cron_interval_field().
+	 *
+	 * Note: This filter must fire on every page load — not just in admin —
+	 * because WP-Cron can be triggered by any front-end request. Registering
+	 * it only in the admin context would cause WordPress to silently reject
+	 * the interval when the scheduled event actually fires.
+	 *
+	 * @since  0.0.4
+	 * @param  array $schedules Existing WP-Cron schedule definitions.
+	 * @return array            Modified schedules array with test interval added.
+	 *
+	 * @see    WelcomeSettings::render_cron_interval_field()
+	 * @todo   Remove this function and its constructor hook before production release.
+	 */
+	public function register_test_cron_intervals( array $schedules ): array {
+		$schedules['every_five_minutes'] = array(
+			'interval' => 300,
+			'display'  => __( 'Every 5 Minutes (testing only)', 'tiaa-wpplugin' ),
+		);
+		return $schedules;
 	}
 }

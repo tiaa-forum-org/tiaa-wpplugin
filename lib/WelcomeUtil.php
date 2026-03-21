@@ -159,12 +159,16 @@ class WelcomeUtil {
 	 */
 	public function schedule_cron(): void {
 		$scan_rate = $this->options['scan_rate'];
-		self::log_debug( "Scheduling welcome cron job for $scan_rate  days..." );
+		$cron_interval = $this->options['cron_interval'] ?? 'daily';
+
+		self::log_debug( "Scheduling welcome cron job — interval: $cron_interval, start offset: $scan_rate ..." );
+
 		if ( ! wp_next_scheduled( self::TIAA_CRON_HOOK ) ) {
-            $format_time = '+' . $scan_rate . ' days';
-			$start_time = strtotime( $format_time, time() );
-			$start_time = strtotime( date( 'Y-m-d H:00:00', $start_time ) ); // Round to the next hour.
-			wp_schedule_event( $start_time, 'daily', self::TIAA_CRON_HOOK );
+			$unit_seconds = $this->get_interval_seconds();
+			$start_time   = time() + ( $scan_rate * $unit_seconds );
+
+			wp_schedule_event( $start_time, $cron_interval, self::TIAA_CRON_HOOK );
+			self::log_debug( "Event set: " . $this->get_cron_status() );
 		}
 		self::enable_cron();
 	}
@@ -236,6 +240,8 @@ class WelcomeUtil {
 
 		$min_days        = $this->options['days_since_joined_min'];
 		$max_days        = $this->options['days_since_joined_max'];
+		$unit_seconds = $this->get_interval_seconds();
+
 		$post_id = $this->options['post_id'];
 		$group_list      = $this->options['group_list'];
 		self::log_debug( 'Running welcome cron- > min days:' . $min_days . ' max days:' . $max_days  );
@@ -271,7 +277,7 @@ class WelcomeUtil {
 				continue;
 			}
 			// Check join date
-			if ( $this->is_within_days_range( $member['created_at'], $min_days, $max_days ) ) {
+			if ( $this->is_within_days_range( $member['created_at'], $min_days, $max_days, $unit_seconds ) ) {
 				// we only need to get the user info if there are excluded group members
 				$group_name = '';
 				if ( $group_list ) {
@@ -292,7 +298,7 @@ class WelcomeUtil {
 					$user_info  = $users['user'];
 					$group_name = $user_info['primary_group_name'];
 					// Check if member is in excluded group
-					if ( self::is_in_excluded_group( $group_name, $group_list ) ) {
+					if ( ! empty($group_name) && self::is_in_excluded_group( $group_name, $group_list ) ) {
 						self::log_to_database( $member, $group_name, 'skipped' );
 						self::log_info( 'Skipped welcome message for member: ' . $member['name'] .
 						                ' group: ' . $group_name );
@@ -325,26 +331,29 @@ class WelcomeUtil {
 		update_option( TIAA_WELCOME_GROUP_CRON, false );
 	}
 	/**
-	 * Helper to determine if a member's date is within the range.
+	 * Determines if the time elapsed since a member joined falls within
+	 * the configured min/max threshold range.
 	 *
-	 * Determines if the number of days since a member joined falls within
-	 * the specified minimum and maximum range.
+	 * The comparison unit is determined by the cron interval so that
+	 * threshold values scale correctly during testing:
+	 * - Daily (production): thresholds are in days
+	 * - Hourly (testing):   thresholds are in hours
+	 * - Every 5 min (testing): thresholds are in 5-minute periods
 	 *
-	 * @param string $created_at The member's join date in string representation.
-	 * @param int    $min_days The minimum number of days since joining.
-	 * @param int    $max_days The maximum number of days since joining.
+	 * @param string $created_at    Member join date as a parseable date string.
+	 * @param int    $min_days      Minimum periods elapsed before sending.
+	 * @param int    $max_days      Maximum periods elapsed — member is skipped after this.
+	 * @param int    $unit_seconds  Seconds per period — pass result of get_interval_seconds().
 	 *
-	 * @return bool True if the date is within range, false otherwise.
-	 * @since 0.0.3
-	 *
+	 * @return bool True if elapsed periods fall within range, false otherwise.
+	 * @since  0.0.3
+	 * @since  0.0.4 Added $unit_seconds parameter to support scaled testing intervals.
 	 */
 	private function is_within_days_range( string $created_at,
-		int $min_days, int $max_days ) : bool {
-		$days_since_joining = floor( ( time() - strtotime( $created_at ) ) / DAY_IN_SECONDS );
-
-		return $days_since_joining >= $min_days && $days_since_joining <= $max_days;
+		int $min_days, int $max_days, int $unit_seconds = DAY_IN_SECONDS ): bool {
+		$periods_elapsed = floor( ( time() - strtotime( $created_at ) ) / $unit_seconds );
+		return $periods_elapsed >= $min_days && $periods_elapsed <= $max_days;
 	}
-
 	/**
 	 * Helper to log processed members to the database.
 	 *
@@ -436,9 +445,8 @@ class WelcomeUtil {
 	 *
 	 */
 	private function tiaa_get_title() : string {
-		return $this->options['post_title'];
+		return $this->options['message_title'] ?? '';
 	}
-
 	/**
 	 * Get recent log entries from the welcome message log.
 	 *
@@ -472,5 +480,36 @@ class WelcomeUtil {
 
 		// Execute the SQL and fetch results.
 		return $this->wpdb->get_results( $query );
+	}
+	/**
+	 * Returns the number of seconds representing one "period" for the
+	 * currently configured cron interval.
+	 *
+	 * Used to scale min/max threshold comparisons so that the same
+	 * numeric values (e.g. min=7, max=30) work proportionally across
+	 * all cron intervals — daily in production, hourly or every-5-minutes
+	 * during testing.
+	 *
+	 * Production (daily):         7 periods = 7 days
+	 * Testing (hourly):           7 periods = 7 hours
+	 * Testing (every_5_minutes):  7 periods = 35 minutes
+	 *
+	 * ⚠️  The hourly and every_five_minutes cases exist solely to support
+	 * accelerated testing. Remove those match arms when the test interval
+	 * support is removed from TiaaHooks::register_test_cron_intervals().
+	 *
+	 * @since  0.0.4
+	 * @return int Seconds per cron period.
+	 *
+	 * @see    TiaaHooks::register_test_cron_intervals()
+	 * @todo   Remove non-daily match arms before production release.
+	 */
+	private function get_interval_seconds(): int {
+		$interval = $this->options['cron_interval'] ?? 'daily';
+		return match( $interval ) {
+			'hourly'             => HOUR_IN_SECONDS,
+			'every_five_minutes' => 300,
+			default              => DAY_IN_SECONDS,
+		};
 	}
 }

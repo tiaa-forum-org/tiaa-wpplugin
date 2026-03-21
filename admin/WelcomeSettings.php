@@ -20,6 +20,7 @@
 namespace TIAAPlugin\Admin;
 
 use TIAAPlugin\lib\PluginUtil;
+use TIAAPlugin\lib\OptionsUtilities;
 
 /**
  * Welcome Settings Manager
@@ -69,13 +70,16 @@ class WelcomeSettings {
 	public function __construct(FormHelper $form_helper) {
 		$this->form_helper = $form_helper;
 
-		// Fetch settings options.
-		$this->options = self::get_options_by_group(TIAA_WELCOME_GROUP);
-
 		// Add admin menus and WordPress settings hooks.
 		add_action('admin_menu', [$this, 'register_admin_menu']);
 		add_action('admin_init', [$this, 'register_settings']);
-	}
+        add_action( 'admin_init', [$this, 'setup_options'] );
+    }
+
+    public function setup_options(): void {
+        $this->options = self::get_options_by_group( TIAA_WELCOME_GROUP );
+
+    }
 
 	/**
 	 * Registers an admin menu page for the Welcome feature settings.
@@ -161,6 +165,14 @@ class WelcomeSettings {
 			'welcome_settings_section'
 		);
 
+        add_settings_field(
+                'cron_interval',
+                'Cron Run Interval',
+                [ $this, 'render_cron_interval_field' ],
+                TIAA_WELCOME_GROUP,
+                'welcome_settings_section'
+        );
+
 		add_settings_field(
 			'group_list',
 			'Excluded Discourse Groups',
@@ -193,8 +205,11 @@ class WelcomeSettings {
 				'validate_options', // Note: Known bug described in README-known-bugs.md.
 			)
 		);
+
         // if option already exists, it will not change the value
         add_option( TIAA_WELCOME_GROUP_CRON, true );
+        // Reschedule cron if interval setting changes.
+        add_action( 'update_option_' . TIAA_WELCOME_GROUP, [ $this, 'reschedule_on_interval_change' ], 10, 2 );
 	}
 
 	/**
@@ -333,8 +348,35 @@ class WelcomeSettings {
 
 		);
 	}
-
-	/**
+    /**
+     * Renders a select field for the cron run interval.
+     *
+     * Allows switching between 'daily' and 'hourly' for testing purposes.
+     * Changing this value requires saving settings — the cron will be
+     * automatically rescheduled on the next page load.
+     *
+     * @since 0.0.4
+     * @return void
+     */
+    public function render_cron_interval_field(): void {
+        $options = self::get_options_by_group( TIAA_WELCOME_GROUP ); // ← fresh fetch, not $this->options
+        $current = $options['cron_interval'] ?? 'daily';
+        $name    = TIAA_WELCOME_GROUP . '[cron_interval]';
+        ?>
+        <select id="cron_interval" name="<?php echo esc_attr( $name ); ?>">
+            <option value="daily"  <?php selected( $current, 'daily' );  ?>>Daily</option>
+            <option value="hourly" <?php selected( $current, 'hourly' ); ?>>Hourly (testing only)</option>
+            <option value="every_five_minutes" <?php selected( $current, 'every_five_minutes' ); ?>>
+                Every 5 minutes (testing only)
+            </option>
+        </select>
+        <p class="description">
+            Use <strong>Hourly</strong> or <strong>Every 5 minutes</strong> for local testing only.
+            After changing, save settings — the cron job will reschedule automatically.
+        </p>
+        <?php
+    }
+    /**
 	 * Renders an input field for excluding Discourse groups from the Welcome feature.
 	 *
 	 * Specifies the list of groups that should not receive the welcome message,
@@ -429,4 +471,31 @@ class WelcomeSettings {
         </div>
 		<?php
 	}
-}
+    /**
+     * Reschedules the cron job when the interval option changes.
+     *
+     * Hooked into update_option_{TIAA_WELCOME_GROUP} so it fires automatically
+     * when settings are saved. Only acts if cron_interval actually changed.
+     *
+     * @param array $old_value Previous option values.
+     * @param array $new_value Updated option values.
+     * @since 0.0.4
+     * @return void
+     */
+    public function reschedule_on_interval_change( array $old_value, array $new_value ): void {
+        $old_interval = $old_value['cron_interval'] ?? 'daily';
+        $new_interval = $new_value['cron_interval'] ?? 'daily';
+
+        if ( $old_interval !== $new_interval ) {
+            // Unschedule via a plain instance (options don't matter for unschedule)
+            $util = new \TIAAPlugin\lib\WelcomeUtil();
+            $util->unschedule_cron();
+
+            // Re-init with new options explicitly merged in before scheduling
+            OptionsUtilities::$option_groups[ TIAA_WELCOME_GROUP ]['cron_interval'] = $new_interval;
+            $util2 = new \TIAAPlugin\lib\WelcomeUtil();
+            $util2->schedule_cron();
+
+            self::log_debug( "Cron rescheduled: $old_interval → $new_interval" );
+        }
+    }}
