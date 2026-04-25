@@ -72,6 +72,7 @@ class OptionsUtilities {
 				'post_id'                => 19,
 				'message_title'     => 'Welcome to the TIAA Forum',
 				'group_list'             => [], // List of excluded groups
+				'cron_interval'          => 'daily',   // daily, hourly, every_5_minutes
 			),
 	);
 
@@ -125,8 +126,9 @@ class OptionsUtilities {
 				// Add option group to the database if not already present.
 				add_option($group_id, self::$option_groups[$group_id]);
 			} else {
-				// Use stored configuration if it exists.
-				$optary = $optaryx;
+				// Merge stored values over defaults so new keys added to
+				// $option_groups are available even on existing installations.
+				$optary = array_merge( self::$option_groups[$group_id], $optaryx );
 			}
 
 			/*

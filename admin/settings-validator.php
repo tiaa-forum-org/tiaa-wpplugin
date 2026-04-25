@@ -66,6 +66,7 @@ class SettingsValidator {
 		add_filter( 'tiaa_validate_email_list', array( $this, 'validate_email_list' ) );
 		add_filter( 'tiaa_validate_screen_list', array( $this, 'validate_screen_list' ) );
 		add_filter( 'tiaa_validate_file_path', array( $this, 'validate_file_path' ) );
+		add_filter( 'tiaa_validate_cron_interval', array( $this, 'validate_cron_interval' ) );
 	}
 
 	/**
@@ -498,5 +499,32 @@ class SettingsValidator {
 		);
 
 		return true;
+	}
+	/**
+	 * Validates the cron run interval setting.
+	 *
+	 * Ensures the stored value is one of the three known interval slugs.
+	 * Falls back to 'daily' if an unexpected value is submitted.
+	 *
+	 * ⚠️  'every_five_minutes' and 'hourly' are testing values only.
+	 * Remove them from $allowed before production release, along with
+	 * TiaaHooks::register_test_cron_intervals().
+	 *
+	 * @since  0.0.4
+	 * @param  string $input The submitted interval value.
+	 * @return string        A validated interval slug, defaulting to 'daily'.
+	 * @todo   Remove 'every_five_minutes' and 'hourly' before production release.
+	 */
+	public function validate_cron_interval( string $input ): string {
+		$allowed = [ 'daily', 'hourly', 'every_five_minutes' ];
+		if ( in_array( $input, $allowed, true ) ) {
+			return $input;
+		}
+		add_settings_error(
+			'tiaa_wpplugin_options',
+			'cron_interval',
+			'Invalid cron interval value — reset to daily.'
+		);
+		return 'daily';
 	}
 }
