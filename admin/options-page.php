@@ -141,6 +141,9 @@ class OptionsPage {
                 <a href="?page=tiaa_wpplugin_options&tab=Logging"
                    class="nav-tab <?php echo 'logging' === $tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Logging' ); ?>
                 </a>
+                <a href="?page=tiaa_wpplugin_options&tab=site_settings"
+                   class="nav-tab <?php echo 'site_settings' === $tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Site Settings' ); ?>
+                </a>
             </h2>
 
 			<?php
@@ -155,7 +158,7 @@ class OptionsPage {
 			if ( $form ) :
 				// 'group-signup', 'email-screen' have multiple forms on one page, handled differently.
                 self::log_debug("options page: tab is: $tab");
-                if ( 'group-signup' != $tab ) {
+                if ( 'group-signup' != $tab && 'site_settings' != $tab ) {
 				?>
 				<form action="options.php" method="post" class="tiaa-wpplugin-options-form">
 					<?php
@@ -224,6 +227,9 @@ class OptionsPage {
                             }
                         }
                 } // if ( 'group-signup' === $tab )
+                if ( 'site_settings' === $tab ) {
+                    ( new \TIAAPlugin\lib\TiaaSiteSettings() )->render_tab();
+                }
 ?>
 			<?php endif; // if ($form) ?>
 

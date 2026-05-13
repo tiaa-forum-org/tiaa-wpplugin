@@ -78,6 +78,9 @@ class TiaaBase {
 //			self::log_debug( "log start" );
 			// need to goose cron to run
 			new WelcomeUtil();
+			new TiaaSiteSettings();    // must be first — cookie classes depend on it
+			new TiaaReturnUrlCookie();
+			new TiaaMemberCookie();
 		}
 	}
 }

@@ -146,6 +146,15 @@ class AdminMenu {
 		);
 		add_action( 'load-' . $logging_settings, array( $this->form_helper, 'connection_status_notice' ) );
 
+		add_submenu_page(
+			'tiaa_wpplugin_options',
+			'Site Settings',
+			'Site Settings',
+			'manage_options',
+			'site_settings',
+			array( $this, 'site_settings_tab' )
+		);
+
 	}
 
 	/**
@@ -212,6 +221,12 @@ class AdminMenu {
 	public function logging_options_tab() : void {
 		if ( current_user_can( 'manage_options' ) ) {
 			$this->options_page->display( 'logging' );
+		}
+	}
+
+	public function site_settings_tab() : void {
+		if ( current_user_can( 'manage_options' ) ) {
+			$this->options_page->display( 'site_settings' );
 		}
 	}
 }
