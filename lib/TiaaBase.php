@@ -81,6 +81,7 @@ class TiaaBase {
 			new TiaaSiteSettings();    // must be first — cookie classes depend on it
 			new TiaaReturnUrlCookie();
 			new TiaaMemberCookie();
+			new TiaaLoginRedirect();
 		}
 	}
 }

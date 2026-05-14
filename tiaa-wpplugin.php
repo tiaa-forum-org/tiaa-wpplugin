@@ -3,7 +3,7 @@
  * Plugin Name: TIAA WordPress Plugin
  * Plugin URI: https://tiaa-forum.org/
  * Description: WordPress plugin in support of various aspects of tiaa-forum.org. Supports Invites, Welcome messages, etc,
- * Version: 0.0.5
+ * Version: 0.0.6
  * Requires at least: 6.5
  * Requires PHP:      8.2.0
  * Author:            Lew Grothe and TIAA Forum Admin Platform sub-team.
@@ -55,6 +55,7 @@ require_once TIAA_PLUGIN_PATH . 'lib/WelcomeUtil.php';
 require_once TIAA_PLUGIN_PATH . 'lib/TiaaSiteSettings.php';
 require_once TIAA_PLUGIN_PATH . 'lib/TiaaReturnUrlCookie.php';
 require_once TIAA_PLUGIN_PATH . 'lib/TiaaMemberCookie.php';
+require_once TIAA_PLUGIN_PATH . 'lib/TiaaLoginRedirect.php';
 
 //initializes the options_array
 
