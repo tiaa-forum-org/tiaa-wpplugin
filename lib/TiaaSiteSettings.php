@@ -63,9 +63,14 @@ class TiaaSiteSettings {
 
 	const SHORTCODE_STAT = 'tiaa_stat';
 
+	/** WP-Discourse options key — Discourse URL is owned by that plugin, not us. */
+	const WPDC_OPTIONS_KEY = 'wpdc_options';
+
 	public function __construct() {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_shortcode( self::SHORTCODE_STAT, [ $this, 'render_stat_shortcode' ] );
+		// Output GO TO FORUM button script on all front-end pages.
+		add_action( 'wp_footer', [ $this, 'output_forum_button_script' ] );
 	}
 
 	public function register_settings(): void {
@@ -83,6 +88,7 @@ class TiaaSiteSettings {
 		add_settings_field( self::KEY_COOKIE_DOMAIN, 'Cookie Domain',    [ $this, 'render_cookie_domain_field' ], $page, self::SECTION_SLUG );
 		add_settings_field( self::KEY_CONTACT_EMAIL, 'Contact Email',    [ $this, 'render_contact_email_field' ], $page, self::SECTION_SLUG );
 		add_settings_field( self::KEY_FUNDING_LEVEL, 'Funding Level',    [ $this, 'render_funding_level_field' ], $page, self::SECTION_SLUG );
+		add_settings_field( 'tiaa_discourse_url_display', 'Discourse URL', [ $this, 'render_discourse_url_field' ], $page, self::SECTION_SLUG );
 		add_settings_field( 'tiaa_stats_group',      'Forum Statistics', [ $this, 'render_stats_fields' ],        $page, self::SECTION_SLUG );
 	}
 
@@ -212,6 +218,70 @@ class TiaaSiteSettings {
 
 	public function sanitize_funding_level( string $value ): string {
 		return in_array( $value, [ 'red', 'yellow', 'green', 'blue' ], true ) ? $value : 'green';
+	}
+
+	/**
+	 * Displays the Discourse URL from WP-Discourse settings (read-only).
+	 * We don't store this ourselves — WP-Discourse owns it.
+	 */
+	public function render_discourse_url_field(): void {
+		$url = self::get_discourse_url();
+		?>
+		<code><?php echo esc_html( $url ?: '(not set)' ); ?></code>
+		<p class="description">
+			Read from WP-Discourse plugin settings. To change it, go to
+			<strong>Settings → WP-Discourse → Connection → Discourse URL</strong>.<br>
+			This value is used as the destination for the GO TO FORUM button
+			and as the redirect target after SSO login.
+		</p>
+		<?php
+	}
+
+	/**
+	 * Outputs a small inline script that sets the href of all .tiaa-go-to-forum
+	 * elements to the Discourse home URL. Fires on all front-end pages.
+	 *
+	 * Targets both logged-in and logged-out states: the GO TO FORUM button is
+	 * only visible to logged-in members (Elementor display condition), but the
+	 * script is harmless when no matching elements are present.
+	 *
+	 * ELEMENTOR STEP: Add CSS class 'tiaa-go-to-forum' to the GO TO FORUM
+	 * button widget in the Header template (Advanced tab → CSS Classes).
+	 */
+	public function output_forum_button_script(): void {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+		$url = self::get_discourse_url();
+		if ( empty( $url ) ) {
+			return;
+		}
+		?>
+		<script id="tiaa-forum-url">
+		(function () {
+			'use strict';
+			var url = '<?php echo esc_js( $url ); ?>';
+			document.querySelectorAll( '.tiaa-go-to-forum' ).forEach( function ( el ) {
+				el.href = url;
+			} );
+		})();
+		</script>
+		<?php
+	}
+
+	/**
+	 * Returns the Discourse home URL from WP-Discourse plugin options.
+	 * WP-Discourse is the single source of truth for this value.
+	 * Falls back to empty string if WP-Discourse is not configured.
+	 *
+	 * Called by output_forum_button_script.
+	 *
+	 * @return string Absolute URL with trailing slash, or empty string.
+	 */
+	public static function get_discourse_url(): string {
+		$wpdc_options = get_option( self::WPDC_OPTIONS_KEY, [] );
+		$url          = $wpdc_options['url'] ?? '';
+		return $url ? trailingslashit( esc_url_raw( $url ) ) : '';
 	}
 
 	/**
