@@ -64,7 +64,7 @@ class TiaaSiteSettings {
 	const SHORTCODE_STAT = 'tiaa_stat';
 
 	/** WP-Discourse options key — Discourse URL is owned by that plugin, not us. */
-	const WPDC_OPTIONS_KEY = 'wpdc_options';
+	const WPDC_OPTIONS_KEY = 'discourse_connect';
 
 	public function __construct() {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
