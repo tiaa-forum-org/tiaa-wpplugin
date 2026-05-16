@@ -14,12 +14,6 @@ if [ ! -d "${TIAA_BACKUP}" ] || [ ! -w "${TIAA_BACKUP}"  ] ; then
 fi
 
 cd ../../
-if [ -d "../../../../../tiaa-dev/tiaa-backup/" ] && [ -w "../../../../../tiaa-dev/tiaa-backup/" ] ; then
-  TIAA_BACKUP="../../../../../tiaa-dev/tiaa-backup"
-else
-  echo "no target directory"
-  exit 1
-fi
 current_date=$(date "+%y%m%d%H%M")
 rm -f /tmp/${PACKAGE_NAME}.zip
 zip  -r /tmp/${PACKAGE_NAME}.zip ${PACKAGE_NAME} \

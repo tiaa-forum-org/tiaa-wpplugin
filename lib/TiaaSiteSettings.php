@@ -261,7 +261,8 @@ class TiaaSiteSettings {
 		(function () {
 			'use strict';
 			var url = '<?php echo esc_js( $url ); ?>';
-			document.querySelectorAll( '.tiaa-go-to-forum' ).forEach( function ( el ) {
+			// Elementor adds the CSS class to the wrapper div, not the <a> — target the link inside.
+			document.querySelectorAll( '.tiaa-go-to-forum a, a.tiaa-go-to-forum' ).forEach( function ( el ) {
 				el.href = url;
 			} );
 		})();
