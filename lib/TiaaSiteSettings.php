@@ -69,8 +69,8 @@ class TiaaSiteSettings {
 	public function __construct() {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_shortcode( self::SHORTCODE_STAT, [ $this, 'render_stat_shortcode' ] );
-		// Output GO TO FORUM button script on all front-end pages.
 		add_action( 'wp_footer', [ $this, 'output_forum_button_script' ] );
+		add_action( 'wp_head',   [ $this, 'output_contribute_color_style' ] );
 	}
 
 	public function register_settings(): void {
@@ -136,7 +136,7 @@ class TiaaSiteSettings {
 			'green'  => 'Green — healthy reserves',
 			'yellow' => 'Yellow — watch needed',
 			'red'    => 'Red — critical',
-			'blue'   => 'Blue — special campaign',
+			'blue'   => 'Blue — over reserves',
 		];
 		?>
 		<select name="<?php echo esc_attr( self::KEY_FUNDING_LEVEL ); ?>">
@@ -267,6 +267,39 @@ class TiaaSiteSettings {
 			} );
 		})();
 		</script>
+		<?php
+	}
+
+	/**
+	 * Outputs an inline <style> block that sets the background colour of all
+	 * .tiaa-contribute elements to match the stored funding level.
+	 *
+	 * ELEMENTOR STEP: Add CSS class 'tiaa-contribute' to the Contribute button
+	 * widget in the Header template (Advanced tab → CSS Classes). The colour
+	 * updates automatically whenever the Funding Level is changed in
+	 * Settings → TIAA WP Plugin → Site Settings.
+	 */
+	public function output_contribute_color_style(): void {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+		$level  = get_option( self::KEY_FUNDING_LEVEL, 'green' );
+		$colors = [
+			'green'  => [ 'bg' => '#28a745', 'color' => null ],
+			'yellow' => [ 'bg' => '#ffc107', 'color' => '#000000' ],
+			'red'    => [ 'bg' => '#dc3545', 'color' => null ],
+			'blue'   => [ 'bg' => '#007bff', 'color' => null ],
+		];
+		$cfg   = $colors[ $level ] ?? $colors['green'];
+		$color = isset( $cfg['color'] ) ? 'color: ' . esc_attr( $cfg['color'] ) . ' !important;' : '';
+		?>
+		<style id="tiaa-contribute-color">
+		.tiaa-contribute a,
+		a.tiaa-contribute {
+			background-color: <?php echo esc_attr( $cfg['bg'] ); ?> !important;
+			<?php echo $color; ?>
+		}
+		</style>
 		<?php
 	}
 
