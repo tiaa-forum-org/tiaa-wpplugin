@@ -1,11 +1,15 @@
 # tiaa-wpplugin — Claude Code Context
-# Last updated: 2026-05-17
+# Last updated: 2026-05-18
 
 ## What This Is
 
 WordPress plugin that bridges WordPress and Discourse for tiaa-forum.org.
 Core responsibilities: Discourse API calls (invites), SSO return-URL cookie,
-member cookie, SSO callback flash suppression, welcome messages, email screening.
+member cookie, welcome messages, email screening.
+
+**SSO model:** Discourse is the identity provider; WP is a client.
+WP-Discourse runs in SSO Client mode. Users authenticate on Discourse; the
+wp-discourse plugin logs them into WP automatically via the SSO callback.
 
 Part of the tiaa-v3 project. See umbrella context at `../CLAUDE.md`.
 
@@ -21,9 +25,9 @@ tiaa-wpplugin/
 ├── tiaa-wpplugin.php          ← entry point; constants, requires, bootstraps
 ├── lib/                       ← all plugin logic (OO PHP, namespace TIAAPlugin\lib)
 │   ├── Discourse.php          ← Discourse API: ping, invite, REST endpoint
-│   ├── TiaaReturnUrlCookie.php ← writes tiaa_wp_return_url cookie before SSO
+│   ├── TiaaReturnUrlCookie.php ← writes tiaa_wp_return_url cookie before SSO initiation
 │   ├── TiaaMemberCookie.php   ← sets tiaa_member cookie; adds body class
-│   ├── TiaaLoginRedirect.php  ← suppresses WP SSO callback flash
+│   ├── TiaaLoginRedirect.php  ← no-op in SSO client mode (kept for reference)
 │   ├── TiaaHooks.php          ← WordPress hook registrations
 │   ├── TiaaBase.php           ← base class
 │   ├── TiaaSiteSettings.php   ← site settings admin tab + front-end output hooks
@@ -71,14 +75,18 @@ REST API endpoint for invites: `POST /tiaa_wpplugin/v1/invite`
 ## Key Classes and Their Responsibilities
 
 ### `TiaaReturnUrlCookie`
-Writes a `tiaa_wp_return_url` cookie before the SSO redirect so the Discourse
-brand header can link back to the exact WP page the user came from.
+Writes a `tiaa_wp_return_url` cookie when a logged-out user clicks a Sign In / Join
+button, so the Discourse brand header can link back to the exact WP page they came from
+after authentication completes.
 
 - Trigger: JS click listener on `.tiaa-sso-trigger` elements (injected via `wp_footer`)
 - Cookie TTL: 1 hour (`COOKIE_TTL = 3600`)
 - Cookie domain: from `TiaaSiteSettings::get_cookie_domain()` (must be `.tiaa-forum.org` with leading dot)
 - Only runs for logged-out users on non-admin pages
 - **Elementor:** Add CSS class `tiaa-sso-trigger` to any Sign In / Join button (Advanced tab → CSS Classes)
+- **SSO trigger `href`:** must point to `/?discourse_sso=1&redirect_to={encoded current URL}` —
+  not directly to Discourse. WP-Discourse's `QueryRedirect` intercepts this and builds the
+  proper Discourse SSO handshake. The cookie write and the SSO initiation both fire on the same click.
 
 ### `TiaaMemberCookie`
 Sets a long-lived `tiaa_member=1` cookie on first logged-in page load.
@@ -88,16 +96,14 @@ Elementor to target returning members with conditional display.
 
 - Cookie TTL: 1 year (`YEAR_IN_SECONDS`)
 - Cookie domain: from `TiaaSiteSettings::get_cookie_domain()`
-- Requires WP-Discourse → SSO → "Enable SSO Provider Logout" ON for bidirectional logout
+- Bidirectional logout requires WP-Discourse SSO Client → "Sync Logout" ON
 
 ### `TiaaLoginRedirect`
-Eliminates the flash of the WP SSO callback page by issuing a server-side
-redirect to Discourse before any HTML renders.
-
-- Hooks `template_redirect` at **priority 20** (after WP-Discourse at priority 10)
-- Detects SSO callback by presence of `?sso=…&sig=…` query params
-- Reads Discourse URL from WP-Discourse's own `wpdc_options → url` — no duplicate config
-- Does not modify the callback URL or WP-Discourse settings
+**No-op in the current SSO client configuration.** Originally written to suppress
+a flash of the WP SSO callback page when WP was the SSO provider. In SSO client
+mode, WP-Discourse handles the Discourse callback at `init` (priority 5) and
+redirects before `template_redirect` ever fires, so this class never activates.
+Kept in the codebase for reference; safe to remove if the provider model never returns.
 
 ### `TiaaSiteSettings`
 Owns the Site Settings admin tab and all global site configuration values.
@@ -121,7 +127,7 @@ Also responsible for two front-end output hooks.
 
 **Static utility methods** (called by other lib classes — must be instantiated before them):
 - `get_cookie_domain()` — used by `TiaaReturnUrlCookie` and `TiaaMemberCookie`
-- `get_discourse_url()` — used by `TiaaLoginRedirect`
+- `get_discourse_url()` — available for other callers; no longer used by `TiaaLoginRedirect`
 
 ### `Discourse`
 Wraps all Discourse API calls. Uses `Api-Key` and `Api-Username` headers.

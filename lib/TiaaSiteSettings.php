@@ -115,8 +115,8 @@ class TiaaSiteSettings {
 			<?php else : ?>
 				Domain shared by WordPress and Discourse for cross-subdomain cookies.
 				Must begin with a dot: <code>.tiaa-forum.org</code> (production),
-				<code>.test.tiaa-forum.org</code> (staging), <code>.local</code> (dev).<br>
-				<em>Tip: set <code>define('TIAA_COOKIE_DOMAIN', '.local');</code> in
+				<code>.test.tiaa-forum.org</code> (staging), <code>.test</code> (dev).<br>
+				<em>Tip: set <code>define('TIAA_COOKIE_DOMAIN', '.test');</code> in
 				<code>wp-config.php</code> to lock this per environment without
 				touching the database.</em>
 			<?php endif; ?>

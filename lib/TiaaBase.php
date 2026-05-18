@@ -58,7 +58,8 @@ class TiaaBase {
 	 * @since 0.0.3
 	 */
 	public function __construct() {
-		add_action( 'init', array( $this, 'initialize_plugin' ) );
+		// Priority 3: must run before WP-Discourse SSO Client, which fires at priority 4–5.
+		add_action( 'init', array( $this, 'initialize_plugin' ), 3 );
 	}
 
 	/**

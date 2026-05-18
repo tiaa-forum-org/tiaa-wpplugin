@@ -44,6 +44,57 @@ class TiaaHooks {
 	public function __construct() {
 		add_action( 'rest_api_init', array( $this, 'initialize_hooks' ) );
 		add_filter( 'cron_schedules', array( $this, 'register_test_cron_intervals' ) );
+		add_action( 'login_init', array( $this, 'skip_logout_confirmation' ) );
+		add_filter( 'wpdc_sso_client_redirect_after_login', array( $this, 'redirect_after_sso_login' ) );
+	}
+
+	/**
+	 * Skips the WordPress logout confirmation page.
+	 *
+	 * WordPress shows a "Do you really want to log out?" confirmation when the
+	 * logout link is missing a `_wpnonce` parameter — a common side-effect of
+	 * SSO-generated logout links. This hook detects that case and immediately
+	 * redirects to the properly nonce'd logout URL produced by `wp_logout_url()`.
+	 *
+	 * Security is preserved: the nonce is still generated and will be validated
+	 * on the subsequent request. This removes the manual confirmation step only.
+	 *
+	 * @since  0.0.6
+	 * @return void
+	 */
+	public function skip_logout_confirmation(): void {
+
+		if (
+			isset( $_REQUEST['action'] ) &&
+			$_REQUEST['action'] === 'logout' &&
+			! isset( $_REQUEST['_wpnonce'] )
+		) {
+			$redirect = isset( $_REQUEST['redirect_to'] )
+				? esc_url_raw( $_REQUEST['redirect_to'] )
+				: home_url( '/' );
+
+			$logout_url = html_entity_decode( wp_logout_url( $redirect ) );
+			wp_redirect( $logout_url );
+			exit;
+		}
+	}
+
+	/**
+	 * Redirects to Discourse home after a successful WP-Discourse SSO Client login.
+	 *
+	 * WP-Discourse SSO Client would normally return the user to the WP page that
+	 * initiated the SSO flow. For TIAA, login is always initiated to reach Discourse,
+	 * so we override the destination to Discourse home. WP is logged in as a
+	 * side-effect; the tiaa_wp_return_url cookie lets the Discourse brand nav link
+	 * back to the originating WP page if needed.
+	 *
+	 * @since  0.0.6
+	 * @param  string $return_url The URL WP-Discourse would redirect to by default.
+	 * @return string             Discourse home URL, or $return_url if not configured.
+	 */
+	public function redirect_after_sso_login( string $return_url ): string {
+		$discourse_url = TiaaSiteSettings::get_discourse_url();
+		return $discourse_url ?: $return_url;
 	}
 
 	/**
