@@ -26,7 +26,7 @@ tiaa-wpplugin/
 │   ├── TiaaLoginRedirect.php  ← suppresses WP SSO callback flash
 │   ├── TiaaHooks.php          ← WordPress hook registrations
 │   ├── TiaaBase.php           ← base class
-│   ├── TiaaSiteSettings.php   ← site settings (cookie domain, Discourse URL)
+│   ├── TiaaSiteSettings.php   ← site settings admin tab + front-end output hooks
 │   ├── WelcomeUtil.php        ← welcome message logic
 │   ├── ScreenEmailsUtil.php   ← screened emails DB logic
 │   ├── PluginUtil.php         ← shared utility trait
@@ -98,6 +98,30 @@ redirect to Discourse before any HTML renders.
 - Detects SSO callback by presence of `?sso=…&sig=…` query params
 - Reads Discourse URL from WP-Discourse's own `wpdc_options → url` — no duplicate config
 - Does not modify the callback URL or WP-Discourse settings
+
+### `TiaaSiteSettings`
+Owns the Site Settings admin tab and all global site configuration values.
+Also responsible for two front-end output hooks.
+
+**Admin fields (Settings → TIAA WP Plugin → Site Settings):**
+- `tiaa_cookie_domain` — shared cookie domain; overridable via `TIAA_COOKIE_DOMAIN` constant in `wp-config.php`
+- `tiaa_contact_email` — site contact email
+- `tiaa_funding_level` — reserve level: `green` / `yellow` / `red` / `blue`
+- `tiaa_stat_members`, `tiaa_stat_topics`, `tiaa_stat_posts` — forum stats (updated manually)
+- `tiaa_stat_as_of` — date the stats were last recorded (YYYY-MM-DD)
+- Discourse URL — read-only display pulled from WP-Discourse
+
+**Shortcodes** (all output `<span class="tiaa-stats">`):
+- `[tiaa_stat field="members|topics|posts"]` — numeric stat values
+- `[tiaa_stat field="as_of"]` — as-of date formatted via the site's WordPress date format
+
+**Front-end hooks:**
+- `wp_head` — `output_contribute_color_style()`: outputs an inline `<style>` block setting the background colour of `.tiaa-contribute` elements based on funding level. Yellow gets black text; others inherit. **Elementor:** add CSS class `tiaa-contribute` to the Contribute button (Advanced → CSS Classes).
+- `wp_footer` — `output_forum_button_script()`: outputs an inline `<script>` that sets the `href` of `.tiaa-go-to-forum` elements to the Discourse URL from WP-Discourse. **Elementor:** add CSS class `tiaa-go-to-forum` to the GO TO FORUM button.
+
+**Static utility methods** (called by other lib classes — must be instantiated before them):
+- `get_cookie_domain()` — used by `TiaaReturnUrlCookie` and `TiaaMemberCookie`
+- `get_discourse_url()` — used by `TiaaLoginRedirect`
 
 ### `Discourse`
 Wraps all Discourse API calls. Uses `Api-Key` and `Api-Username` headers.
