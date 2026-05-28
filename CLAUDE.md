@@ -74,6 +74,23 @@ REST API endpoint for invites: `POST /tiaa_wpplugin/v1/invite`
 
 ## Key Classes and Their Responsibilities
 
+### `TiaaBase`
+Entry point class; bootstrapped from the main plugin file. The constructor
+registers `initialize_plugin()` on `init` at priority 3 (before WP-Discourse
+SSO, which fires at 4–5).
+
+`initialize_plugin()` also contains two inline behaviours that must run on
+`init` (after WP has established the current user) rather than earlier hooks:
+
+- **Admin bar suppression** — hides the WP admin bar for logged-in
+  non-administrator users. Subscribers (the role Discourse SSO assigns) have
+  no use for it on the front end; admins retain it. Implemented inline here
+  because `after_setup_theme` fires before `is_user_logged_in()` is reliable.
+- **Auth cookie lifetime** — extends the WP auth cookie to 30 days via
+  `auth_cookie_expiration`. Discourse is the SSO authority; a shorter cookie
+  would log members out of WP while they remain active on Discourse, causing
+  split-session states.
+
 ### `TiaaReturnUrlCookie`
 Writes a `tiaa_wp_return_url` cookie when a logged-out user clicks a Sign In / Join
 button, so the Discourse brand header can link back to the exact WP page they came from
