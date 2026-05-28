@@ -91,6 +91,18 @@ class TiaaBase {
 			add_filter( 'auth_cookie_expiration', function( $length, $user_id, $remember ) {
 				return 30 * DAY_IN_SECONDS;
 			}, 10, 3 );
+			/**
+			 * Hides the WordPress admin bar for logged-in non-administrator users.
+			 *
+			 * Forum members authenticated via Discourse SSO receive a standard WordPress
+			 * subscriber role. Showing them the admin bar serves no purpose and clutters
+			 * the front end. Administrators retain the bar for quick access to site tools.
+			 *
+			 * @since  0.0.7
+			 */
+			if ( is_user_logged_in() && ! current_user_can( 'administrator' ) ) {
+				show_admin_bar( false );
+			}
 		}
 	}
 }
