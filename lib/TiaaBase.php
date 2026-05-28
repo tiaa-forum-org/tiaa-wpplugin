@@ -65,10 +65,19 @@ class TiaaBase {
 	/**
 	 * Initializes the plugin configuration.
 	 *
-	 * This function checks whether the hooks have been set, initializes
-	 * plugin options, and starts logging debug information for the plugin.
+	 * Runs once on `init` (priority 3, before WP-Discourse SSO at 4–5). Guards
+	 * against double-initialization with the $hooks null check.
+	 *
+	 * Registers an `auth_cookie_expiration` filter to extend the WordPress
+	 * authentication cookie lifetime to 30 days for all logged-in users.
+	 * Discourse is the SSO authority — WP session length is secondary, and a
+	 * shorter cookie would log members out of WP while they remain active on
+	 * Discourse, causing confusing split-session states.
 	 *
 	 * @since 0.0.3
+	 * @since 0.0.7 Added auth_cookie_expiration filter; removed inline class
+	 *              instantiation of site settings and cookie helpers (now
+	 *              self-registering via their own constructors).
 	 *
 	 * @return void
 	 */
@@ -76,13 +85,12 @@ class TiaaBase {
 		if ( ! $this->hooks ) {
 			$this->hooks = new TiaaHooks();
 			$this->options = $this->get_all_options();
-//			self::log_debug( "log start" );
-			// need to goose cron to run
 			new WelcomeUtil();
-			new TiaaSiteSettings();    // must be first — cookie classes depend on it
-			new TiaaReturnUrlCookie();
-			new TiaaMemberCookie();
-			new TiaaLoginRedirect();
+
+			// Extend WP auth cookie to 30 days for members (Discourse is SSO authority)
+			add_filter( 'auth_cookie_expiration', function( $length, $user_id, $remember ) {
+				return 30 * DAY_IN_SECONDS;
+			}, 10, 3 );
 		}
 	}
 }

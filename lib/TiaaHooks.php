@@ -46,6 +46,7 @@ class TiaaHooks {
 		add_filter( 'cron_schedules', array( $this, 'register_test_cron_intervals' ) );
 		add_action( 'login_init', array( $this, 'skip_logout_confirmation' ) );
 		add_filter( 'wpdc_sso_client_redirect_after_login', array( $this, 'redirect_after_sso_login' ) );
+		add_action( 'after_setup_theme', array( $this, 'suppress_admin_bar_for_members' ) );
 	}
 
 	/**
@@ -296,6 +297,22 @@ class TiaaHooks {
 		);
 		return $results;
 	}
+	/**
+	 * Hides the WordPress admin bar for logged-in non-administrator users.
+	 *
+	 * Forum members authenticated via Discourse SSO receive a standard WordPress
+	 * subscriber role. Showing them the admin bar serves no purpose and clutters
+	 * the front end. Administrators retain the bar for quick access to site tools.
+	 *
+	 * @since  0.0.7
+	 * @return void
+	 */
+	public function suppress_admin_bar_for_members(): void {
+		if ( is_user_logged_in() && ! current_user_can( 'administrator' ) ) {
+			show_admin_bar( false );
+		}
+	}
+
 	/**
 	 * Registers custom WP-Cron intervals for testing purposes.
 	 *
