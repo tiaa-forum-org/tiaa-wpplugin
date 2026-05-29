@@ -11,7 +11,8 @@ member cookie, welcome messages, email screening.
 WP-Discourse runs in SSO Client mode. Users authenticate on Discourse; the
 wp-discourse plugin logs them into WP automatically via the SSO callback.
 
-Part of the tiaa-v3 project. See umbrella context at `../CLAUDE.md`.
+Part of the tiaa-v3 project. Umbrella WP environment context:
+`../tiaa-wpsite-v3/docs/wp-env-context.md` (tracked in tiaa-wpsite-v3).
 
 > **Note:** `AI-Context.txt` in this directory is a legacy context file predating
 > Claude Code. This `CLAUDE.md` supersedes it and is the authoritative AI context.
