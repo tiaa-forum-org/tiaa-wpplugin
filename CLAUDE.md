@@ -101,6 +101,10 @@ after authentication completes.
 - Cookie TTL: 1 hour (`COOKIE_TTL = 3600`)
 - Cookie domain: from `TiaaSiteSettings::get_cookie_domain()` (must be `.tiaa-forum.org` with leading dot)
 - Only runs for logged-out users on non-admin pages
+- **Consumer:** `tiaa-forum-org/TIAA-BrandTheme-v3` — reads this cookie in its JS
+  initializer and updates `.tiaa-home-link` hrefs to return the user to the originating
+  WP page. The component validates the cookie value against a safe-domain allow-list
+  (see that repo's CLAUDE.md); hostnames not on the list are silently rejected.
 - **Elementor:** Add CSS class `tiaa-sso-trigger` to any Sign In / Join button (Advanced tab → CSS Classes)
 - **SSO trigger `href`:** must point to `/?discourse_sso=1&redirect_to={encoded current URL}` —
   not directly to Discourse. WP-Discourse's `QueryRedirect` intercepts this and builds the
@@ -111,6 +115,10 @@ Sets a long-lived `tiaa_member=1` cookie on first logged-in page load.
 Persists after logout — intentional (tracks returning members).
 Adds `tiaa-returning-member` body class whenever cookie is present, allowing
 Elementor to target returning members with conditional display.
+
+The Discourse-side parallel is `localStorage.tiaa_returning_user` set by
+`tiaa-forum-org/TIAA-DiscourseTheme-v1` after SSO callback — same concept,
+separate mechanism scoped to each platform.
 
 - Cookie TTL: 1 year (`YEAR_IN_SECONDS`)
 - Cookie domain: from `TiaaSiteSettings::get_cookie_domain()`
