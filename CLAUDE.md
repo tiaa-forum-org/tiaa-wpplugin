@@ -128,8 +128,16 @@ separate mechanism scoped to each platform.
 mDNS domain and refuse to set cross-subdomain cookies on it. `tiaa_wp_return_url`
 and `tiaa_member` cannot be shared between WP and Discourse on local dev.
 **Use staging** (`test.tiaa-forum.org` / `discourse-f2.test.tiaa-forum.org`) for
-any cookie or SSO flow testing. Set `TIAA_COOKIE_DOMAIN` to `.test.tiaa-forum.org`
-in the staging `wp-config.php`.
+any cookie or SSO flow testing.
+
+**Staging cookie domain:** set `tiaa_cookie_domain` to `.test.tiaa-forum.org` in
+the Site Settings admin tab. The `TIAA_COOKIE_DOMAIN` constant in `wp-config.php`
+is not required — it is an optional override that locks the value and prevents
+accidental admin changes. If the constant is absent, the admin setting is used.
+
+**Confirmed working (2026-05-30):** Full cross-subdomain cookie flow verified on
+staging — `tiaa_wp_return_url` and `tiaa_member` both visible on Discourse side;
+BrandTheme return-URL override confirmed functional.
 
 ### `TiaaLoginRedirect`
 **No-op in the current SSO client configuration.** Originally written to suppress
