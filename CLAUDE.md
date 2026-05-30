@@ -124,6 +124,13 @@ separate mechanism scoped to each platform.
 - Cookie domain: from `TiaaSiteSettings::get_cookie_domain()`
 - Bidirectional logout requires WP-Discourse SSO Client → "Sync Logout" ON
 
+**Local dev limitation — both cookies:** Browsers treat `.local` as a reserved
+mDNS domain and refuse to set cross-subdomain cookies on it. `tiaa_wp_return_url`
+and `tiaa_member` cannot be shared between WP and Discourse on local dev.
+**Use staging** (`test.tiaa-forum.org` / `discourse-f2.test.tiaa-forum.org`) for
+any cookie or SSO flow testing. Set `TIAA_COOKIE_DOMAIN` to `.test.tiaa-forum.org`
+in the staging `wp-config.php`.
+
 ### `TiaaLoginRedirect`
 **No-op in the current SSO client configuration.** Originally written to suppress
 a flash of the WP SSO callback page when WP was the SSO provider. In SSO client
@@ -204,3 +211,4 @@ Logger is not reliably initialized for all `\PluginUtil` call paths — needs au
 - `vendor_prefixed/` must be present (prefixed Composer deps, committed to repo)
 - No build step; no `composer install` needed on the server
 - Cookie domain setting in TiaaSiteSettings must match the live domain (`.tiaa-forum.org`)
+- Cross-subdomain cookies cannot be tested on local dev — `.local` is a reserved mDNS domain; browsers block cross-subdomain cookies on it. Use staging.
