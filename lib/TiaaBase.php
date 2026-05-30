@@ -75,9 +75,8 @@ class TiaaBase {
 	 * Discourse, causing confusing split-session states.
 	 *
 	 * @since 0.0.3
-	 * @since 0.0.7 Added auth_cookie_expiration filter; removed inline class
-	 *              instantiation of site settings and cookie helpers (now
-	 *              self-registering via their own constructors).
+	 * @since 0.0.7 Added auth_cookie_expiration filter and admin bar suppression;
+	 *              restored instantiation of site settings and cookie helpers.
 	 *
 	 * @return void
 	 */
@@ -85,6 +84,10 @@ class TiaaBase {
 		if ( ! $this->hooks ) {
 			$this->hooks = new TiaaHooks();
 			$this->options = $this->get_all_options();
+			new TiaaSiteSettings();    // must be first — cookie classes depend on get_cookie_domain()
+			new TiaaReturnUrlCookie();
+			new TiaaMemberCookie();
+			new TiaaLoginRedirect();
 			new WelcomeUtil();
 
 			// Extend WP auth cookie to 30 days for members (Discourse is SSO authority)
