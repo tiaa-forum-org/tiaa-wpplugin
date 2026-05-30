@@ -1,5 +1,5 @@
 # tiaa-wpplugin — Claude Code Context
-# Last updated: 2026-05-27
+# Last updated: 2026-05-30
 
 ## What This Is
 
