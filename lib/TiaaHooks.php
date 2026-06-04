@@ -46,6 +46,32 @@ class TiaaHooks {
 		add_filter( 'cron_schedules', array( $this, 'register_test_cron_intervals' ) );
 		add_action( 'login_init', array( $this, 'skip_logout_confirmation' ) );
 		add_filter( 'wpdc_sso_client_redirect_after_login', array( $this, 'redirect_after_sso_login' ) );
+		add_filter( 'body_class', array( $this, 'add_member_body_class' ) );
+	}
+
+	/**
+	 * Adds 'tiaa-member' to the WordPress body class list when the tiaa_member
+	 * cookie is present.
+	 *
+	 * The tiaa_member cookie is written by TiaaMemberCookie on first logged-in
+	 * page load and intentionally persists after logout — it marks a visitor as a
+	 * known member regardless of current login state. This body class makes that
+	 * state available to CSS and Elementor display conditions on every page load
+	 * where the cookie exists, covering all three visitor states:
+	 *
+	 *   anonymous (no cookie)  →  class absent
+	 *   returning member       →  class present, no WP session
+	 *   logged-in member       →  class present, WP session active
+	 *
+	 * @since  0.0.8
+	 * @param  string[] $classes Existing body classes.
+	 * @return string[]          Modified body classes.
+	 */
+	public function add_member_body_class( array $classes ): array {
+		if ( isset( $_COOKIE['tiaa_member'] ) && ! empty( $_COOKIE['tiaa_member'] ) ) {
+			$classes[] = 'tiaa-member';
+		}
+		return $classes;
 	}
 
 	/**
