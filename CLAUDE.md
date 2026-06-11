@@ -4,8 +4,8 @@
 ## What This Is
 
 WordPress plugin that bridges WordPress and Discourse for tiaa-forum.org.
-Core responsibilities: Discourse API calls (invites), SSO return-URL cookie,
-member cookie, welcome messages, email screening.
+Current version: 0.0.9. Core responsibilities: Discourse API calls (invites),
+SSO return-URL cookie, member cookie, welcome messages, email screening.
 
 **SSO model:** Discourse is the identity provider; WP is a client.
 WP-Discourse runs in SSO Client mode. Users authenticate on Discourse; the
