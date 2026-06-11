@@ -21,14 +21,16 @@
  * tiaa_stat_members     Member count displayed on homepage stats card.
  * tiaa_stat_topics      Topic count displayed on homepage stats card.
  * tiaa_stat_posts       Post count displayed on homepage stats card.
+ * tiaa_stat_categories  Category count displayed on homepage stats card.
  * tiaa_stat_as_of       Date the statistics were last recorded (YYYY-MM-DD).
  *
  * SHORTCODES
  * ----------
- * [tiaa_stat field="members"]  →  value of tiaa_stat_members
- * [tiaa_stat field="topics"]   →  value of tiaa_stat_topics
- * [tiaa_stat field="posts"]    →  value of tiaa_stat_posts
- * [tiaa_stat field="as_of"]    →  value of tiaa_stat_as_of (formatted date)
+ * [tiaa_stat field="members"]     →  value of tiaa_stat_members (comma-formatted)
+ * [tiaa_stat field="topics"]      →  value of tiaa_stat_topics (comma-formatted)
+ * [tiaa_stat field="posts"]       →  value of tiaa_stat_posts (comma-formatted)
+ * [tiaa_stat field="categories"]  →  value of tiaa_stat_categories (comma-formatted)
+ * [tiaa_stat field="as_of"]       →  value of tiaa_stat_as_of (formatted date)
  *
  * All shortcodes output a <span class="tiaa-stats"> wrapper for consistent styling.
  * Drop these into any Elementor text or heading widget. Update the values
@@ -60,10 +62,11 @@ class TiaaSiteSettings {
 	const KEY_COOKIE_DOMAIN = 'tiaa_cookie_domain';
 	const KEY_CONTACT_EMAIL = 'tiaa_contact_email';
 	const KEY_FUNDING_LEVEL = 'tiaa_funding_level';
-	const KEY_STAT_MEMBERS  = 'tiaa_stat_members';
-	const KEY_STAT_TOPICS   = 'tiaa_stat_topics';
-	const KEY_STAT_POSTS    = 'tiaa_stat_posts';
-	const KEY_STAT_AS_OF    = 'tiaa_stat_as_of';
+	const KEY_STAT_MEMBERS    = 'tiaa_stat_members';
+	const KEY_STAT_TOPICS     = 'tiaa_stat_topics';
+	const KEY_STAT_POSTS      = 'tiaa_stat_posts';
+	const KEY_STAT_CATEGORIES = 'tiaa_stat_categories';
+	const KEY_STAT_AS_OF      = 'tiaa_stat_as_of';
 
 	const SHORTCODE_STAT = 'tiaa_stat';
 
@@ -81,10 +84,11 @@ class TiaaSiteSettings {
 		register_setting( self::OPTION_GROUP, self::KEY_COOKIE_DOMAIN, [ 'sanitize_callback' => 'sanitize_text_field', 'default' => '.tiaa-forum.org' ] );
 		register_setting( self::OPTION_GROUP, self::KEY_CONTACT_EMAIL, [ 'sanitize_callback' => 'sanitize_email',       'default' => '' ] );
 		register_setting( self::OPTION_GROUP, self::KEY_FUNDING_LEVEL, [ 'sanitize_callback' => [ $this, 'sanitize_funding_level' ], 'default' => 'green' ] );
-		register_setting( self::OPTION_GROUP, self::KEY_STAT_MEMBERS,  [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
-		register_setting( self::OPTION_GROUP, self::KEY_STAT_TOPICS,   [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
-		register_setting( self::OPTION_GROUP, self::KEY_STAT_POSTS,    [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
-		register_setting( self::OPTION_GROUP, self::KEY_STAT_AS_OF,    [ 'sanitize_callback' => 'sanitize_text_field', 'default' => '' ] );
+		register_setting( self::OPTION_GROUP, self::KEY_STAT_MEMBERS,    [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
+		register_setting( self::OPTION_GROUP, self::KEY_STAT_TOPICS,     [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
+		register_setting( self::OPTION_GROUP, self::KEY_STAT_POSTS,      [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
+		register_setting( self::OPTION_GROUP, self::KEY_STAT_CATEGORIES, [ 'sanitize_callback' => 'absint',              'default' => 0  ] );
+		register_setting( self::OPTION_GROUP, self::KEY_STAT_AS_OF,      [ 'sanitize_callback' => 'sanitize_text_field', 'default' => '' ] );
 
 		$page = self::OPTIONS_PAGE . '_' . self::TAB_SLUG;
 
@@ -160,10 +164,11 @@ class TiaaSiteSettings {
 	}
 
 	public function render_stats_fields(): void {
-		$members = get_option( self::KEY_STAT_MEMBERS, 0 );
-		$topics  = get_option( self::KEY_STAT_TOPICS,  0 );
-		$posts   = get_option( self::KEY_STAT_POSTS,   0 );
-		$as_of   = get_option( self::KEY_STAT_AS_OF,   '' );
+		$members    = get_option( self::KEY_STAT_MEMBERS,    0 );
+		$topics     = get_option( self::KEY_STAT_TOPICS,     0 );
+		$posts      = get_option( self::KEY_STAT_POSTS,      0 );
+		$categories = get_option( self::KEY_STAT_CATEGORIES, 0 );
+		$as_of      = get_option( self::KEY_STAT_AS_OF,      '' );
 		?>
 		<table class="form-table" style="margin:0;padding:0">
 			<tr>
@@ -179,16 +184,22 @@ class TiaaSiteSettings {
 				<td><input type="number" min="0" name="<?php echo esc_attr( self::KEY_STAT_POSTS ); ?>" value="<?php echo esc_attr( $posts ); ?>" class="small-text"></td>
 			</tr>
 			<tr>
+				<th style="padding-left:0;font-weight:normal">Categories</th>
+				<td><input type="number" min="0" name="<?php echo esc_attr( self::KEY_STAT_CATEGORIES ); ?>" value="<?php echo esc_attr( $categories ); ?>" class="small-text"></td>
+			</tr>
+			<tr>
 				<th style="padding-left:0;font-weight:normal">As of</th>
 				<td><input type="date" name="<?php echo esc_attr( self::KEY_STAT_AS_OF ); ?>" value="<?php echo esc_attr( $as_of ); ?>" class="regular-text"></td>
 			</tr>
 		</table>
 		<p class="description">
 			Displayed on the homepage statistics card. Update manually when Discourse
-			reports change. Use in Elementor:
+			reports change. Numbers are formatted with comma-separated thousands on the front end.
+			Use in Elementor:
 			<code>[tiaa_stat field="members"]</code>
 			<code>[tiaa_stat field="topics"]</code>
 			<code>[tiaa_stat field="posts"]</code>
+			<code>[tiaa_stat field="categories"]</code>
 			<code>[tiaa_stat field="as_of"]</code><br>
 			All shortcodes output a <code>&lt;span class="tiaa-stats"&gt;</code> wrapper for styling.
 		</p>
@@ -228,15 +239,16 @@ class TiaaSiteSettings {
 		}
 
 		$map = [
-			'members' => self::KEY_STAT_MEMBERS,
-			'topics'  => self::KEY_STAT_TOPICS,
-			'posts'   => self::KEY_STAT_POSTS,
+			'members'    => self::KEY_STAT_MEMBERS,
+			'topics'     => self::KEY_STAT_TOPICS,
+			'posts'      => self::KEY_STAT_POSTS,
+			'categories' => self::KEY_STAT_CATEGORIES,
 		];
 		$key = $map[ $atts['field'] ] ?? null;
 		if ( ! $key ) {
 			return '';
 		}
-		return '<span class="tiaa-stats">' . esc_html( (string) (int) get_option( $key, 0 ) ) . '</span>';
+		return '<span class="tiaa-stats">' . esc_html( number_format_i18n( (int) get_option( $key, 0 ) ) ) . '</span>';
 	}
 
 	public function sanitize_funding_level( string $value ): string {
