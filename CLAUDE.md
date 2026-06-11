@@ -161,12 +161,12 @@ Also responsible for two front-end output hooks.
 - `tiaa_cookie_domain` — shared cookie domain; overridable via `TIAA_COOKIE_DOMAIN` constant in `wp-config.php`
 - `tiaa_contact_email` — site contact email
 - `tiaa_funding_level` — reserve level: `green` / `yellow` / `red` / `blue`
-- `tiaa_stat_members`, `tiaa_stat_topics`, `tiaa_stat_posts` — forum stats (updated manually)
+- `tiaa_stat_members`, `tiaa_stat_topics`, `tiaa_stat_posts`, `tiaa_stat_categories` — forum stats (updated manually)
 - `tiaa_stat_as_of` — date the stats were last recorded (YYYY-MM-DD)
 - Discourse URL — read-only display pulled from WP-Discourse
 
 **Shortcodes** (all output `<span class="tiaa-stats">`):
-- `[tiaa_stat field="members|topics|posts"]` — numeric stat values
+- `[tiaa_stat field="members|topics|posts|categories"]` — numeric stat values, comma-formatted (via `number_format_i18n()`)
 - `[tiaa_stat field="as_of"]` — as-of date formatted via the site's WordPress date format
 
 **Front-end hooks:**
