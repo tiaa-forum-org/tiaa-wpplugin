@@ -1,5 +1,5 @@
 # tiaa-wpplugin — Claude Code Context
-# Last updated: 2026-06-03
+# Last updated: 2026-06-10
 
 ## What This Is
 
@@ -113,8 +113,15 @@ after authentication completes.
 ### `TiaaMemberCookie`
 Sets a long-lived `tiaa_member=1` cookie on first logged-in page load.
 Persists after logout — intentional (tracks returning members).
-Adds `tiaa-returning-member` body class whenever cookie is present, allowing
-Elementor to target returning members with conditional display.
+
+Adds two body classes whenever the cookie is present:
+- `tiaa-returning-member` — added by `TiaaMemberCookie` (older; drives Elementor display conditions)
+- `tiaa-member` — added by `TiaaHooks::add_member_body_class` (v0.0.8; used by tiaa-elementor CSS utility classes)
+
+**tiaa-elementor dependency:** `tiaa-elementor` v0.0.9+ enqueues a sitewide stylesheet
+that provides `.tiaa-member-only` and `.tiaa-anon-only` utility classes toggled by
+`body.tiaa-member`. Template authors can add these classes to any Elementor element
+to show or hide it based on member state without extra JS.
 
 The Discourse-side parallel is `localStorage.tiaa_returning_user` set by
 `tiaa-forum-org/TIAA-DiscourseTheme-v1` after SSO callback — same concept,
