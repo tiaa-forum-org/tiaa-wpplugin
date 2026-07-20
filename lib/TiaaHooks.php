@@ -141,6 +141,9 @@ class TiaaHooks {
 	public function register_discourse_ping_route() :bool {
 		$results = register_rest_route( TIAA_HOOK_NAMESPACE, '/tiaa_discourse_ping', array(
 			'methods'  => 'GET',
+			'permission_callback'  => function () {
+				return current_user_can( 'manage_options' );
+			},
 			'args' => array (
 				'option_group' => array(
 					'validate_callback' => function ($param,
@@ -169,7 +172,13 @@ class TiaaHooks {
 			'/invite',
 			array(
 				'methods'              => 'POST',
-				'permission_callback'  => __return_empty_string(),
+				// Intentionally public: hit by anonymous visitors via Elementor
+				// invite forms. __return_true is passed as a callable reference,
+				// not called here — a prior version accidentally called
+				// __return_empty_string() instead, which happened to also grant
+				// access, but only because WP core's dispatch check treats an
+				// empty-string permission_callback as absent rather than denying.
+				'permission_callback'  => '__return_true',
 				'callback'             => array( $this, 'invite_to_discourse' ),
 			),
 			true

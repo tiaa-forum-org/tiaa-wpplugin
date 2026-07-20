@@ -80,6 +80,9 @@ function tiaa_enqueue_admin_scripts() : void {
 		filemtime( plugin_dir_path( __FILE__ ) . $script_path ),
 		true
 	);
+	wp_localize_script( 'tiaa_admin_js', 'tiaaAdminRest', array(
+		'nonce' => wp_create_nonce( 'wp_rest' ),
+	) );
 	wp_enqueue_script( 'tiaa_admin_js' );
 
 	// Define the path to the file download JavaScript file.

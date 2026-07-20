@@ -41,7 +41,9 @@ window.onload = function() {
 };
 
 function fetchPingResults(ref, event) {
-    fetch(ref)
+    fetch(ref, {
+        headers: { 'X-WP-Nonce': (typeof tiaaAdminRest !== 'undefined') ? tiaaAdminRest.nonce : '' }
+    })
         .then(response => response.json()) // Parsing the data as JSON
         .then(data => {
  //           console.log(data); // Logging data to the console
