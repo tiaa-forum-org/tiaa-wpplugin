@@ -9,26 +9,32 @@
  * HOW IT WORKS
  * ------------
  * When Discourse completes SSO it redirects the user to the WordPress
- * callback URL (the "logged-in landing page") with ?sso=...&sig=... params.
- * WP-Discourse intercepts this early in the request lifecycle, validates the
- * payload, creates/updates the WordPress user, and logs them in. By the time
- * template_redirect fires, the user is already authenticated in WordPress.
+ * callback URL with ?sso=...&sig=... params. WP-Discourse intercepts this at
+ * init (priority 5), validates the payload, and logs the user in on success.
+ * By the time template_redirect fires, the outcome is determined.
  *
- * This class hooks into template_redirect at priority 20 (after WP-Discourse),
- * detects the SSO callback by the presence of the sso and sig query params,
- * confirms the user is logged in, and redirects to Discourse home. The
- * WordPress page never renders — the user sees no flash.
+ * SUCCESS PATH
+ * After successful SSO: user is logged in → redirect to Discourse home (302).
+ * The WordPress callback page never renders.
  *
- * CALLBACK URL
- * ------------
- * The WordPress SSO callback URL is:
- *   home_url() + Login Path (WP-Discourse SSO setting)
- * This class does not change that URL or its WP-Discourse configuration.
+ * FAILURE PATH
+ * If SSO fails (bad credentials, cancelled login, invalid nonce) WP-Discourse
+ * cannot log the user in. This class detects that (SSO params present but user
+ * NOT logged in) and redirects to the Discourse login page with ?sso_failed=1.
+ * The Discourse brand header component reads that param and injects a styled
+ * error notice into the login form.
+ *
+ * ALLOWED REDIRECT HOSTS
+ * wp_safe_redirect() only allows same-domain redirects by default. The
+ * allow_discourse_host() method adds the Discourse hostname to the allowed
+ * list via the allowed_redirect_hosts filter.
  *
  * DISCOURSE URL
- * -------------
- * Read from WP-Discourse's own stored options (wpdc_options → url) so we
- * don't duplicate configuration. Falls back to home_url() if not set.
+ * TiaaSiteSettings::get_discourse_url() is the single source of truth —
+ * reads from WP-Discourse options, no duplicated config.
+ *
+ * HOOK TIMING
+ * Priority 20 on template_redirect — after WP-Discourse (default priority 10).
  *
  * @package TIAAPlugin
  * @subpackage TIAAPlugin\lib
@@ -45,17 +51,17 @@ class TiaaLoginRedirect {
 
 	public function __construct() {
 		// Priority 20 — after WP-Discourse's template_redirect processing (priority 10).
-		add_action( 'template_redirect', [ $this, 'maybe_redirect_after_sso' ], 20 );
+		add_action( 'template_redirect',    [ $this, 'maybe_redirect_after_sso' ], 20 );
+		add_filter( 'allowed_redirect_hosts', [ $this, 'allow_discourse_host' ] );
 	}
 
 	/**
-	 * Redirects to Discourse after a successful SSO callback.
+	 * Intercepts the Discourse SSO callback and redirects appropriately.
 	 *
-	 * Fires on template_redirect for every request. Bails immediately unless
-	 * all three conditions are met:
-	 *   1. SSO query params are present (this is the Discourse callback)
-	 *   2. User is logged in (WP-Discourse has completed its processing)
-	 *   3. Not in admin/AJAX/cron context
+	 * Fires on template_redirect for every request. Bails immediately if
+	 * SSO query params are absent or if running in admin/AJAX/cron context.
+	 * On SSO callback: success → Discourse home; failure → Discourse login
+	 * page with ?sso_failed=1.
 	 *
 	 * @return void
 	 */
@@ -69,24 +75,43 @@ class TiaaLoginRedirect {
 			return;
 		}
 
-		// WP-Discourse should have logged the user in by now.
-		// If not, something went wrong — let the page render so errors are visible.
-		if ( ! is_user_logged_in() ) {
-			return;
-		}
-
-		// TiaaSiteSettings is the single point of access for the Discourse URL.
-		// It reads from WP-Discourse options — no duplicated config.
 		$discourse_url = TiaaSiteSettings::get_discourse_url();
+		$fallback_url  = home_url( '/' );
 
-		if ( empty( $discourse_url ) ) {
-			// WP-Discourse not configured — fall back to WP home rather than
-			// redirecting to an empty URL.
-			$discourse_url = home_url( '/' );
+		if ( is_user_logged_in() ) {
+			// SSO succeeded — go to Discourse home.
+			wp_safe_redirect( $discourse_url ?: $fallback_url, 302 );
+			exit;
 		}
 
-		wp_safe_redirect( $discourse_url, 302 );
+		// SSO callback received but user not logged in — authentication failed.
+		// Redirect to the Discourse login page with ?sso_failed=1 so the brand
+		// header component can display a meaningful error notice.
+		$login_url = add_query_arg(
+			'sso_failed', '1',
+			trailingslashit( $discourse_url ) . 'login'
+		);
+		wp_safe_redirect( $login_url ?: $fallback_url, 302 );
 		exit;
+	}
+
+	/**
+	 * Adds the Discourse hostname to WordPress's allowed redirect hosts.
+	 * Required for wp_safe_redirect() to permit cross-subdomain redirects
+	 * to Discourse on both the success and failure paths.
+	 *
+	 * @param  array $hosts Allowed hostnames.
+	 * @return array
+	 */
+	public function allow_discourse_host( array $hosts ): array {
+		$discourse_url = TiaaSiteSettings::get_discourse_url();
+		if ( $discourse_url ) {
+			$host = wp_parse_url( $discourse_url, PHP_URL_HOST );
+			if ( $host ) {
+				$hosts[] = $host;
+			}
+		}
+		return $hosts;
 	}
 
 	/**

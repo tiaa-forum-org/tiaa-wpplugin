@@ -1,10 +1,10 @@
 # tiaa-wpplugin — Claude Code Context
-# Last updated: 2026-06-25
+# Last updated: 2026-07-23
 
 ## What This Is
 
 WordPress plugin that bridges WordPress and Discourse for tiaa-forum.org.
-Current version: 0.0.9. Core responsibilities: Discourse API calls (invites),
+Current version: 0.0.11. Core responsibilities: Discourse API calls (invites),
 SSO return-URL cookie, member cookie, welcome messages, email screening.
 
 **SSO model:** Discourse is the identity provider; WP is a client.
@@ -28,7 +28,7 @@ tiaa-wpplugin/
 │   ├── Discourse.php          ← Discourse API: ping, invite, REST endpoint
 │   ├── TiaaReturnUrlCookie.php ← writes tiaa_wp_return_url cookie before SSO initiation
 │   ├── TiaaMemberCookie.php   ← sets tiaa_member cookie; adds body class
-│   ├── TiaaLoginRedirect.php  ← no-op in SSO client mode (kept for reference)
+│   ├── TiaaLoginRedirect.php  ← handles failed-SSO redirect + Discourse allowed_redirect_hosts
 │   ├── TiaaHooks.php          ← WordPress hook registrations
 │   ├── TiaaBase.php           ← base class
 │   ├── TiaaSiteSettings.php   ← site settings admin tab + front-end output hooks
@@ -147,11 +147,27 @@ staging — `tiaa_wp_return_url` and `tiaa_member` both visible on Discourse sid
 BrandTheme return-URL override confirmed functional.
 
 ### `TiaaLoginRedirect`
-**No-op in the current SSO client configuration.** Originally written to suppress
-a flash of the WP SSO callback page when WP was the SSO provider. In SSO client
-mode, WP-Discourse handles the Discourse callback at `init` (priority 5) and
-redirects before `template_redirect` ever fires, so this class never activates.
-Kept in the codebase for reference; safe to remove if the provider model never returns.
+**Active — handles the failed-SSO case.** Originally written to suppress a flash
+of the WP SSO callback page when WP was the SSO provider; repurposed for SSO
+client mode.
+
+On a successful SSO callback, WP-Discourse's `parse_request()` (`init`, priority 5)
+logs the user in and redirects to `return_sso_url` before `template_redirect` ever
+fires — this class never activates for that path. But on a **failed** callback
+(bad signature, expired nonce, no matching user, etc.), WP-Discourse's
+`parse_request()` only logs the error via `handle_errors()` and returns — it does
+not redirect. `template_redirect` still fires with `?sso=...&sig=...` in the URL
+and the user not logged in. This class detects that case and redirects to the
+Discourse login page with `?sso_failed=1`, which `TIAA-BrandTheme-v3`'s header
+reads to show a styled error notice. Without this, a failed SSO attempt silently
+renders the WP callback page with no indication anything went wrong.
+
+Also registers `allow_discourse_host()` on the `allowed_redirect_hosts` filter.
+`wp_safe_redirect()` only permits same-host redirects by default; without
+Discourse's host on the allow-list, `wp_validate_redirect()` rejects both the
+success-path and failure-path redirects to Discourse and falls back to an
+empty/current location — this filter is required for either redirect to actually
+reach Discourse, not just a nice-to-have.
 
 ### `TiaaSiteSettings`
 Owns the Site Settings admin tab and all global site configuration values.
@@ -175,7 +191,7 @@ Also responsible for two front-end output hooks.
 
 **Static utility methods** (called by other lib classes — must be instantiated before them):
 - `get_cookie_domain()` — used by `TiaaReturnUrlCookie` and `TiaaMemberCookie`
-- `get_discourse_url()` — available for other callers; no longer used by `TiaaLoginRedirect`
+- `get_discourse_url()` — used by `TiaaLoginRedirect` (failure-path redirect + allowed host) and available for other callers
 
 ### `Discourse`
 Wraps all Discourse API calls. Uses `Api-Key` and `Api-Username` headers.
