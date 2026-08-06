@@ -138,7 +138,7 @@ class LogSettings {
 			esc_html( 'Log level'),
 			'number',
 			null,
-			array( 'style' => 'width: 2em;' ,
+			array( 'style' => 'width: 4em;' ,
                 'min' => 3, 'max'=> 7)
 		);
 		$log_levels = TIAAFile::LOG_LEVELS;
