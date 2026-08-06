@@ -30,6 +30,48 @@ This plugin consolidates various functions previously handled by Google Apps Scr
 - Supports configurable parameters for integration with Discourse.
 - Implements WordPress cron jobs for scheduled tasks.
 
+### 5. **Wordfence-Safe Logout Route (`/tiaa-logout`)**
+- Added in v0.0.12 (`lib/TiaaLogoutRoute.php`).
+- **Why it exists:** the site's logout link used to point at
+  `/wp-login.php?action=logout`. Wordfence's Brute Force Protection locks out
+  `wp-login.php` after repeated failed login attempts — since logout went
+  through the same script, a locked-out visitor couldn't log out either.
+  `/tiaa-logout` never touches `wp-login.php`, so it stays reachable during a
+  lockout.
+- **Href format:** `/tiaa-logout?redirect_to=/` — the Elementor header's
+  Logout button/link must use this, not `wp_logout_url()` or
+  `/wp-login?action=logout`. See `tiaa-wpsite-v3`'s
+  `docs/guides/03 elementor header template.md` for the Elementor-side setup.
+- **`redirect_to` param:** optional; validated with `wp_validate_redirect()`
+  so it can't be pointed off-site. Defaults to the site home URL if absent or
+  invalid.
+- **No nonce check, deliberately:** the logout link this replaces never had
+  one either (logout is non-destructive), so this preserves the existing
+  one-click behavior. Do not "fix" this by adding nonce verification.
+- **Discourse SSO teardown still works:** the route calls WordPress core's
+  `wp_logout()`, which fires the standard `wp_logout` and `clear_auth_cookie`
+  actions — the same hooks WP-Discourse's SSO Client uses to end the
+  corresponding Discourse session. Verified (2026-08) to behave identically
+  to the old `/wp-login.php?action=logout` flow: both call `wp_logout()` the
+  same way, and no plugin in this stack (WP-Discourse, Wordfence, Simple
+  History) hooks anything specific to `wp-login.php`'s request path — they
+  all hook the generic `wp_logout` / `clear_auth_cookie` actions that fire
+  regardless of which route triggers them.
+- **⚠️ Does not sync Discourse logout on local/localhost installs.**
+  WP-Discourse's Discourse-logout API call
+  (`POST /admin/users/{id}/log_out`) fails silently on local dev — e.g. the
+  `wp-test` Docker environment talking to `discourse-dev.test` — because
+  that container's CA trust store doesn't include the local mkcert
+  certificate the Discourse dev instance uses (`cURL error 60: SSL
+  certificate problem: unable to get local issuer certificate`).
+  WordPress logs the user out fine either way; only the Discourse-side API
+  call is affected, and it fails the exact same way via the old
+  `/wp-login.php?action=logout` link too — this is a pre-existing local-dev
+  environment gap, not specific to `/tiaa-logout`. Confirmed working
+  correctly on `test-v3` staging (2026-08-06). See the `xdebug` repo's
+  Dockerfile for the equivalent CA-trust fix already prepared for its
+  container; `wp-test`'s `Dockerfile.wp-test` doesn't yet have it applied.
+
 ## Installation
 
 1. **Upload the Plugin:**

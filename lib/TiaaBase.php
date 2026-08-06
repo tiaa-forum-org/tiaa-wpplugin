@@ -88,6 +88,7 @@ class TiaaBase {
 			new TiaaReturnUrlCookie();
 			new TiaaMemberCookie();
 			new TiaaLoginRedirect();
+			new TiaaLogoutRoute();
 			new WelcomeUtil();
 
 			// Extend WP auth cookie to 30 days for members (Discourse is SSO authority)

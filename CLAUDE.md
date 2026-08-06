@@ -1,10 +1,10 @@
 # tiaa-wpplugin — Claude Code Context
-# Last updated: 2026-07-23
+# Last updated: 2026-08-06
 
 ## What This Is
 
 WordPress plugin that bridges WordPress and Discourse for tiaa-forum.org.
-Current version: 0.0.11. Core responsibilities: Discourse API calls (invites),
+Current version: 0.0.12. Core responsibilities: Discourse API calls (invites),
 SSO return-URL cookie, member cookie, welcome messages, email screening.
 
 **SSO model:** Discourse is the identity provider; WP is a client.
@@ -29,6 +29,7 @@ tiaa-wpplugin/
 │   ├── TiaaReturnUrlCookie.php ← writes tiaa_wp_return_url cookie before SSO initiation
 │   ├── TiaaMemberCookie.php   ← sets tiaa_member cookie; adds body class
 │   ├── TiaaLoginRedirect.php  ← handles failed-SSO redirect + Discourse allowed_redirect_hosts
+│   ├── TiaaLogoutRoute.php    ← /tiaa-logout route (Wordfence-safe logout, bypasses wp-login.php)
 │   ├── TiaaHooks.php          ← WordPress hook registrations
 │   ├── TiaaBase.php           ← base class
 │   ├── TiaaSiteSettings.php   ← site settings admin tab + front-end output hooks
@@ -168,6 +169,27 @@ Discourse's host on the allow-list, `wp_validate_redirect()` rejects both the
 success-path and failure-path redirects to Discourse and falls back to an
 empty/current location — this filter is required for either redirect to actually
 reach Discourse, not just a nice-to-have.
+
+### `TiaaLogoutRoute`
+**Added v0.0.12.** Handles `/tiaa-logout`, a logout endpoint that never
+touches `wp-login.php`. Wordfence's Brute Force Protection locks out
+`wp-login.php` after repeated failed logins; since the old logout link
+(`/wp-login?action=logout`) hit that same script, a locked-out visitor
+couldn't log out either. This class matches `REQUEST_URI` directly on
+`init` (no rewrite rule) and calls core `wp_logout()`, which fires the same
+`wp_logout` / `clear_auth_cookie` actions WP-Discourse's SSO Client and
+Wordfence/Simple History already hook — so Discourse SSO teardown and
+security logging both continue to work exactly as before. No nonce check,
+deliberately (the link it replaces never had one). `redirect_to` is
+validated via `wp_validate_redirect()`.
+
+Elementor header's Logout link/button href must be
+`/tiaa-logout?redirect_to=/` — see `tiaa-wpsite-v3`'s
+`docs/guides/03 elementor header template.md`.
+
+**Local-dev caveat:** Discourse-side logout sync fails silently on `wp-test`
+(SSL cert trust gap talking to `discourse-dev.test` — see README). WP-side
+logout still works fine. Confirmed working end-to-end on test-v3 staging.
 
 ### `TiaaSiteSettings`
 Owns the Site Settings admin tab and all global site configuration values.
