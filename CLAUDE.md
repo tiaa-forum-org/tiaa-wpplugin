@@ -1,5 +1,5 @@
 # tiaa-wpplugin — Claude Code Context
-# Last updated: 2026-08-06
+# Last updated: 2026-08-17
 
 ## What This Is
 
@@ -123,6 +123,17 @@ Adds two body classes whenever the cookie is present:
 that provides `.tiaa-member-only` and `.tiaa-anon-only` utility classes toggled by
 `body.tiaa-member`. Template authors can add these classes to any Elementor element
 to show or hide it based on member state without extra JS.
+
+**Security boundary (SECURITY-REVIEW.md F7):** `tiaa_member` is presentation-only,
+not an auth control. It's trivially spoofable (any visitor can set `tiaa_member=1`)
+and is never consulted in any PHP capability, REST permission, or content-access
+decision — the only two reads (`TiaaMemberCookie::` and `TiaaHooks::add_member_body_class`)
+just append a body CSS class. Because `.tiaa-member-only` hides via CSS, anything
+placed behind it is still present in the page HTML for anonymous visitors — the
+cookie only controls whether it's *displayed*. Fine for cosmetic member/anon UI;
+**never** use these classes to "protect" sensitive content. This same warning
+belongs next to the utility-class description in `tiaa-elementor`'s own docs —
+not yet added there as of this review pass.
 
 The Discourse-side parallel is `localStorage.tiaa_returning_user` set by
 `tiaa-forum-org/TIAA-DiscourseTheme-v1` after SSO callback — same concept,
