@@ -60,8 +60,6 @@ class LogSettings {
 		$this->form_helper = $form_helper;
 
 		add_action( 'admin_init', array( $this, 'register_log_settings' ) );
-		// Add action to handle the log file download request.
-		add_action( 'admin_post_download_log_file', array( __CLASS__, 'handle_download_log_file' ) );
 	}
 
 	/**
