@@ -73,6 +73,14 @@ class GeneralFileHandler {
 				exit;
 			}
 
+			// Explicit capability check (defense-in-depth; the nonce above is
+			// already only ever minted on a manage_options-gated admin page).
+			if ( ! current_user_can( 'manage_options' ) ) {
+				header( 'HTTP/1.1 403 Forbidden' );
+				echo json_encode( [ 'error' => 'Insufficient permissions.' ] );
+				exit;
+			}
+
 			// Get file path or dynamic data type (file-based or generated content)
 			$file_type = $_GET['type'] ?? '';
 			switch ( $file_type ) {
@@ -169,6 +177,18 @@ class GeneralFileHandler {
 	 * @return void Outputs the CSV file or an error response and exits.
 	 */
 	private static function output_csv_from_database( string $table_name ) : void {
+		// Allowlist: these are the only tables any caller in this plugin exports
+		// today (screened-emails-view.php, welcome-data-view.php). The table name
+		// arrives as a raw GET parameter and cannot be parameterized as an
+		// identifier, so it must be checked against a fixed list rather than
+		// escaped.
+		$allowed_tables = [ 'tiaa_screened_emails', 'tiaa_welcome_log' ];
+		if ( ! in_array( $table_name, $allowed_tables, true ) ) {
+			header( 'HTTP/1.1 400 Bad Request' );
+			echo json_encode( [ 'error' => 'Invalid table name.' ] );
+			exit;
+		}
+
 		global $wpdb;
 		$full_table_name = $wpdb->prefix . $table_name;
 		$results = $wpdb->get_results( "SELECT * FROM $full_table_name", ARRAY_A );
