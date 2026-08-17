@@ -186,58 +186,5 @@ class ScreenedEmailsHandler {
 				}				fclose( $handle );
 			}
 		}
-
-		// Export to CSV.
-		if ( isset( $_POST['export_csv'] ) ) {
-			// Verify the nonce for security
-			check_admin_referer( 'export_emails_csv', '_wpnonce_export_csv' );
-			// Try handling the file export process.
-
-				// Get the file name from user input (if provided)
-				$file_name = ! empty( $_POST['export_file_name'] )
-					? $_POST['export_file_name']
-					: '/tmp/screened_emails.csv';
-				// Ensure the file has a .csv extension
-				if ( pathinfo( $file_name, PATHINFO_EXTENSION ) !== 'csv' ) {
-					$file_name .= '.csv';
-				}
-	//			$output = fopen( 'php://output', 'w' );
-		try {
-				$output = @fopen( $file_name, 'w' );
-				if ($output === false) {
-					throw new \Exception('Failed to open file for writing: ' . $file_name);
-				}
-				// Fetch email data from the database
-				$emails = $this->wpdb->get_results( "SELECT * FROM {$this->table_name}", ARRAY_A );
-				// Output CSV columns
-				if (!empty($_POST['column_labels']) && $_POST['column_labels'] === 'on')
-					fputcsv( $output, array( 'ID', 'Email', 'Hit Count', 'Date Added', 'Last Accessed', 'Notes' ) );
-
-				// Output each row
-				foreach ( $emails as $email ) {
-					fputcsv( $output, $email );
-				}
-
-				fclose( $output );
-				// If successful, show a success notice with the file name.
-				// Add a success message
-				add_settings_error(
-					'tiaa_wpplugin_options', // Settings slug
-					'screened_emails_csv_file',  // Unique ID
-					'File '. $file_name . ' created', // Message text
-					'updated' // 'updated' for success, 'error' for failure
-				);
-				settings_errors();
-			} catch ( \Exception $e ) {
-				// Handle error during file creation or saving and show a notice.
-				add_settings_error(
-					'tiaa_wpplugin_options', // Settings slug
-					'screened_emails_csv_file',  // Unique ID
-					'File '. $file_name . ' not created: ' . $e->getMessage(), // Message text
-					'error' // 'updated' for success, 'error' for failure
-				);
-				settings_errors();
-			}
-		}
 	}
 }
