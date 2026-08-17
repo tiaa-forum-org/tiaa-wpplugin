@@ -137,6 +137,7 @@ class ScreenedEmailsHandler {
 	protected function handle_form_submissions(): void {
 		// Add new email.
 		if ( isset( $_POST['submit_email'] ) && ! empty( $_POST['email'] ) ) {
+			check_admin_referer( 'add_screened_email', '_wpnonce_add_email' );
 			$this->wpdb->insert(
 				$this->table_name,
 				array(
@@ -144,18 +145,20 @@ class ScreenedEmailsHandler {
 					'hit_count'          => 0,
 					'date_time_added'    => current_time( 'mysql' ),
 					'date_time_last_access' => current_time( 'mysql' ),
-					'notes'              => $_POST['notes'] ?? null,
+					'notes'              => isset( $_POST['notes'] ) ? sanitize_text_field( $_POST['notes'] ) : null,
 				)
 			);
 		}
 
 		// Delete email by ID.
 		if ( isset( $_POST['delete_email_id'] ) ) {
+			check_admin_referer( 'delete_screened_email', '_wpnonce_delete_email' );
 			$this->wpdb->delete( $this->table_name, array( 'ID' => intval( $_POST['delete_email_id'] ) ) );
 		}
 
 		// Import from CSV.
 		if ( isset( $_POST['import_csv'] ) && isset( $_FILES['csv_file'] ) ) {
+			check_admin_referer( 'import_screened_emails_csv', '_wpnonce_import_csv' );
 			$file = $_FILES['csv_file']['tmp_name'];
 			if ( $file ) {
 				$handle = fopen( $file, 'r' );
@@ -167,9 +170,9 @@ class ScreenedEmailsHandler {
 						continue;
 					}
 					$hit_count = isset( $data[1] ) ? intval( $data[1] ) : 0; // Default to 0 if missing
-					$date_time_added = $data[2] ?? current_time( 'mysql' );
-					$date_time_last_access = $data[3] ?? current_time( 'mysql' );
-					$notes = $data[4] ?? null;
+					$date_time_added = isset( $data[2] ) ? sanitize_text_field( $data[2] ) : current_time( 'mysql' );
+					$date_time_last_access = isset( $data[3] ) ? sanitize_text_field( $data[3] ) : current_time( 'mysql' );
+					$notes = isset( $data[4] ) ? sanitize_text_field( $data[4] ) : null;
 
 
 					// Insert into database

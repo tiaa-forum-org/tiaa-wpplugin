@@ -27,6 +27,7 @@
     <div id="tiaaScreenedEmailsDiv">
         <!-- Add Email Form -->
         <form method="post">
+			<?php wp_nonce_field( 'add_screened_email', '_wpnonce_add_email' ); ?>
             <label for="tiaa-screened-email">Email to be screened: </label>
             <input type="email" name="email" width="15em" id="tiaa-screened-email" required>
             <label for="tiaa-screened-email-notes">Notes: </label>
@@ -48,8 +49,9 @@
 
         <!-- Import CSV Form -->
         <form method="post" enctype="multipart/form-data">
+			<?php wp_nonce_field( 'import_screened_emails_csv', '_wpnonce_import_csv' ); ?>
             <label for="tiaa_csv_file">Import CSV: </label>
-            <input type="file" name="tiaa_csv_file" id="tiaa_csv_file" required>
+            <input type="file" name="csv_file" id="tiaa_csv_file" required>
 			<?php
 			submit_button(
 				'Import CSV',
@@ -113,6 +115,7 @@
                         <!-- Delete Email Button -->
                         <td>
                             <form method="post">
+								<?php wp_nonce_field( 'delete_screened_email', '_wpnonce_delete_email' ); ?>
                                 <input type="hidden" name="delete_email_id" value="<?php echo esc_attr($email->ID); ?>">
                                 <button type="submit" class="button button-danger">Delete</button>
                             </form>
