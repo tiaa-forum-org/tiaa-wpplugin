@@ -75,15 +75,25 @@ class TiaaHooks {
 	}
 
 	/**
-	 * Skips the WordPress logout confirmation page.
+	 * Skips the WordPress logout confirmation page for SSO-originated links.
 	 *
 	 * WordPress shows a "Do you really want to log out?" confirmation when the
 	 * logout link is missing a `_wpnonce` parameter — a common side-effect of
-	 * SSO-generated logout links. This hook detects that case and immediately
-	 * redirects to the properly nonce'd logout URL produced by `wp_logout_url()`.
+	 * SSO-generated logout links, which Discourse mints without knowledge of a
+	 * WP nonce. This hook detects that case and immediately redirects to the
+	 * properly nonce'd logout URL produced by `wp_logout_url()`.
 	 *
-	 * Security is preserved: the nonce is still generated and will be validated
-	 * on the subsequent request. This removes the manual confirmation step only.
+	 * Scoped to requests referred from the configured Discourse host only
+	 * (SECURITY-REVIEW.md F5): without that check, any third-party page could
+	 * link to `/wp-login.php?action=logout` and force-log-out a visiting
+	 * member with no confirmation step at all. A page cannot forge the
+	 * Referer WordPress sees for a request it triggers — that header always
+	 * reflects the page the link actually lives on — so this narrows the
+	 * auto-skip to links genuinely embedded in Discourse.
+	 *
+	 * Security is preserved either way: the nonce is still generated and will
+	 * be validated on the subsequent request. This only removes the manual
+	 * confirmation step, and only for the Discourse-originated case.
 	 *
 	 * @since  0.0.6
 	 * @return void
@@ -93,7 +103,8 @@ class TiaaHooks {
 		if (
 			isset( $_REQUEST['action'] ) &&
 			$_REQUEST['action'] === 'logout' &&
-			! isset( $_REQUEST['_wpnonce'] )
+			! isset( $_REQUEST['_wpnonce'] ) &&
+			$this->referred_from_discourse()
 		) {
 			$redirect = isset( $_REQUEST['redirect_to'] )
 				? esc_url_raw( $_REQUEST['redirect_to'] )
@@ -103,6 +114,27 @@ class TiaaHooks {
 			wp_redirect( $logout_url );
 			exit;
 		}
+	}
+
+	/**
+	 * Returns true if the current request's Referer host matches the
+	 * configured Discourse URL's host.
+	 *
+	 * @since  0.0.13
+	 * @return bool
+	 */
+	private function referred_from_discourse(): bool {
+		$referer = isset( $_SERVER['HTTP_REFERER'] ) ? wp_unslash( $_SERVER['HTTP_REFERER'] ) : '';
+		if ( ! $referer ) {
+			return false;
+		}
+		$discourse_url = TiaaSiteSettings::get_discourse_url();
+		if ( ! $discourse_url ) {
+			return false;
+		}
+		$referer_host   = wp_parse_url( $referer, PHP_URL_HOST );
+		$discourse_host = wp_parse_url( $discourse_url, PHP_URL_HOST );
+		return $referer_host && $discourse_host && $referer_host === $discourse_host;
 	}
 
 	/**
