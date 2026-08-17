@@ -219,6 +219,49 @@ class TiaaHooks {
 	}
 
 	/**
+	 * Max invite requests allowed per IP within INVITE_RATE_LIMIT_WINDOW seconds.
+	 *
+	 * @since 0.0.13
+	 */
+	private const INVITE_RATE_LIMIT_MAX = 5;
+
+	/**
+	 * Rate-limit window, in seconds, for the invite endpoint.
+	 *
+	 * @since 0.0.13
+	 */
+	private const INVITE_RATE_LIMIT_WINDOW = 60;
+
+	/**
+	 * Returns true if the requesting IP has exceeded the invite rate limit.
+	 *
+	 * Basic per-IP throttle (SECURITY-REVIEW.md F6) against an anonymous
+	 * caller driving the site's Discourse into sending invite-email spam.
+	 * Uses REMOTE_ADDR directly rather than X-Forwarded-For, since the
+	 * latter is trivially spoofable unless a trusted reverse proxy is
+	 * configured to overwrite it — if this site is ever put behind a proxy
+	 * that forwards the real client IP via a header, this will need updating
+	 * to read that header instead, or every caller will share one bucket.
+	 *
+	 * @since 0.0.13
+	 * @return bool
+	 */
+	private function invite_rate_limit_exceeded(): bool {
+		$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+		if ( empty( $ip ) ) {
+			// No IP to key on — fail open rather than block legitimate submitters.
+			return false;
+		}
+		$key   = 'tiaa_invite_rl_' . md5( $ip );
+		$count = (int) get_transient( $key );
+		if ( $count >= self::INVITE_RATE_LIMIT_MAX ) {
+			return true;
+		}
+		set_transient( $key, $count + 1, self::INVITE_RATE_LIMIT_WINDOW );
+		return false;
+	}
+
+	/**
 	 * Handles the invitation of members to Discourse via a REST API request.
 	 *
 	 * This method processes the request payload (either JSON-encoded or form-encoded),
@@ -233,6 +276,18 @@ class TiaaHooks {
 	 * @throws Exception If unable to fetch or process connection options for Discourse.
 	 */
 	public function invite_to_discourse( WP_REST_Request $request ): WP_REST_Response {
+		if ( $this->invite_rate_limit_exceeded() ) {
+			self::log_notice( 'invite rate limit exceeded for ' . ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ) );
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'code'    => 'rate_limited',
+					'message' => 'Too many requests. Please try again shortly.',
+				),
+				429
+			);
+		}
+
 		$content_type = $request->get_header('content-type');
 		if ( empty($content_type) || str_contains( $content_type, 'application/json' ) ) {
 		    // Handle JSON-encoded body
@@ -276,9 +331,14 @@ class TiaaHooks {
 			return $return_err;
 		} else {
 			if ( $this->screen->is_screened_email($data['email']) === true) {
+				self::log_debug($data['email'] . " is a screened email");
+				// Uniform response (SECURITY-REVIEW.md F6): must not be
+				// distinguishable from a genuine successful invite response,
+				// or an anonymous caller could probe this endpoint to test
+				// whether any given email is on the screened list. The
+				// distinct 'dropped_email' code was exactly that signal.
 				$response = new WP_REST_Response(
-					array('success' => true,'status' => 200,'code' =>'dropped_email'), 200);
-				self:self::log_debug($data['email'] . " is a screened email");
+					array( 'success' => true, 'status' => 200, 'response' => 'OK' ), 200 );
 				return rest_ensure_response( $response );
 			}
 			if (!empty($data['group'])) {
