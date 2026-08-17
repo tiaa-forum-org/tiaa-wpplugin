@@ -303,6 +303,16 @@ class TiaaHooks {
 	 * This route allows fetching posts from Discourse, verifying input
 	 * parameters before processing the request.
 	 *
+	 * The request to Discourse is made with the site's stored (privileged)
+	 * API credentials, so this must not be publicly reachable — an anonymous
+	 * caller could otherwise read any Discourse post by ID, including
+	 * private/staff content, to whatever extent the configured key allows.
+	 * The only current callers are "Get Message" / "Ping test" preview links
+	 * on admin settings pages (GroupInviteSettings, InviteSettings,
+	 * WelcomeSettings), all rendered behind manage_options — gating the route
+	 * itself the same way just closes the anonymous-access gap without
+	 * touching those callers.
+	 *
 	 * @return bool True if the route was successfully registered, false otherwise.
 	 */
 	public function register_get_discourse_post_by_id(): bool {
@@ -311,7 +321,9 @@ class TiaaHooks {
 			'/get_discourse_post',
 			array(
 				'methods'              => 'GET',
-				'permission_callback'  => '__return_true',
+				'permission_callback'  => function () {
+					return current_user_can( 'manage_options' );
+				},
 				'callback'             => array( $this, 'get_discourse_post_by_id' ),
 				'args'                 => array(
 					'post_id'      => array(
