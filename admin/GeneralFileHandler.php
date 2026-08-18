@@ -153,10 +153,17 @@ class GeneralFileHandler {
 		header( 'Content-Disposition: attachment; filename="' . basename( $file_name ) . '"' );
 		header( 'Content-Length: ' . filesize( $file_path ) );
 
-		// Clean buffer and serve file directly
+		// Clean buffer and serve file directly. ob_clean()/flush() alone don't
+		// release content past the ob_start() buffer tiaa_serve_file() opened
+		// around this call, so without exiting here, readfile()'s output stays
+		// trapped in that buffer and gets silently discarded by the caller's
+		// finally-block ob_end_clean() -- the browser gets correct headers and
+		// an empty body. Match output_csv_from_database()'s pattern, which
+		// exits internally for the same reason.
 		ob_clean();
 		flush();
 		readfile( $file_path );
+		exit;
 	}
 
 	/**
