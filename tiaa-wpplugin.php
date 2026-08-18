@@ -5,13 +5,17 @@
  * Description: WordPress plugin in support of various aspects of tiaa-forum.org. Supports Invites, Welcome messages, etc,
  * Version: 0.0.14
  * Requires at least: 6.5
- * Requires PHP:      8.2.0
+ * Requires PHP:      8.0.0
  * Author:            Lew Grothe and TIAA Forum Admin Platform sub-team.
  * Author URI:        https://tiaa-forum.org
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  *
  */
+// TODO(2026-08): Requires PHP was lowered from 8.2.0 to 8.0.0 to match the
+// oldest PHP version actually running across our environments. Revisit and
+// raise it back once all environments (prod, staging, local dev) are
+// confirmed on 8.2+ -- don't let this linger indefinitely.
 if( !defined('ABSPATH') )
 	exit;
 // strict error levels are dangerous except when debugging
