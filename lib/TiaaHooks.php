@@ -332,13 +332,25 @@ class TiaaHooks {
 		} else {
 			if ( $this->screen->is_screened_email($data['email']) === true) {
 				self::log_debug($data['email'] . " is a screened email");
-				// Uniform response (SECURITY-REVIEW.md F6): must not be
-				// distinguishable from a genuine successful invite response,
-				// or an anonymous caller could probe this endpoint to test
-				// whether any given email is on the screened list. The
-				// distinct 'dropped_email' code was exactly that signal.
+				// Uniform response (SECURITY-REVIEW.md F6, hardened per N2 in the
+				// follow-up scan): must not be distinguishable from a genuine
+				// successful invite response, or an anonymous caller could probe
+				// this endpoint to test whether any given email is on the
+				// screened list. A real success (Discourse::handle_discourse_response())
+				// always includes a body_response key -- this branch was missing
+				// it, which was itself a reliable "screened" signal (Object.keys()
+				// diffing the two responses). Adding a synthetic one here closes
+				// that. Note: this does NOT close the timing side-channel (this
+				// branch returns immediately, a real invite makes a network call
+				// to Discourse) -- that's accepted as a known residual for now,
+				// not fixed by this change.
 				$response = new WP_REST_Response(
-					array( 'success' => true, 'status' => 200, 'response' => 'OK' ), 200 );
+					array(
+						'success'       => true,
+						'status'        => 200,
+						'response'      => 'OK',
+						'body_response' => '{}',
+					), 200 );
 				return rest_ensure_response( $response );
 			}
 			if (!empty($data['group'])) {
