@@ -278,7 +278,8 @@ class WelcomeSettings {
             null,
 			 array( 'style' => 'width: 10em;' )
 		);
-		$hook_url = site_url() . '/wp-json/tiaa_wpplugin/v1/tiaa_discourse_ping?option_group=' . TIAA_WELCOME_GROUP;
+		$hook_url = site_url() . '/wp-json/tiaa_wpplugin/v1/tiaa_discourse_ping?option_group=' . TIAA_WELCOME_GROUP
+			. '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
 		?>
         <div class="wrap tiaa-ping-discourse-class" id="tiaa-ping2">
             <a href='<?php echo esc_url( $hook_url ); ?>' id="tiaa-ping2-a">Ping test</a>
@@ -439,7 +440,8 @@ class WelcomeSettings {
 		$options = self::get_options_by_group( TIAA_WELCOME_GROUP );
 		// Display additional options only if `post_id` is set.
 		if ( isset( $options['post_id'] ) && $options['post_id'] > 1 ) {
-			$hook_url = site_url() . "/wp-json/tiaa_wpplugin/v1/get_discourse_post/?post_id={$options['post_id']}&option_group=tiaa_invite";
+			$hook_url = site_url() . "/wp-json/tiaa_wpplugin/v1/get_discourse_post/?post_id={$options['post_id']}&option_group=tiaa_invite"
+				. '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
 			?>
             <div class="wrap tiaa-message-discourse-class" id="tiaa-message1">
                 <a href='<?php echo esc_url( $hook_url ); ?>' id="tiaa-message1-a">Get Message</a>

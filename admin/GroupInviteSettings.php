@@ -292,7 +292,8 @@ class GroupInviteSettings {
             null,
             array("style" => 'width: 10em;')
 		);
-        $hook_url = site_url("/wp-json/tiaa_wpplugin/v1/tiaa_discourse_ping?option_group=$option_group_name");
+        $hook_url = site_url("/wp-json/tiaa_wpplugin/v1/tiaa_discourse_ping?option_group=$option_group_name")
+            . '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
 		?>
         <div class="wrap tiaa-ping-discourse-class" id="tiaa-ping-<?php echo $args['group_name'];?>">
             <a href="<?php echo $hook_url ?>"  id="tiaa-ping-<?php echo $args['group_name'];?>-a" >Ping test</a>
@@ -330,7 +331,8 @@ class GroupInviteSettings {
         // only display options if post_id has been set
 		if (isset($options['post_id']) && $options['post_id'] > 10) {
 			$hook_url = site_url("/wp-json/tiaa_wpplugin/v1/get_discourse_post/" .
-                    "?post_id={$options['post_id']}&option_group=$option_group_name");
+                    "?post_id={$options['post_id']}&option_group=$option_group_name")
+                . '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
 			?>
             <div class="wrap tiaa-message-discourse-class" id="tiaa-message-<?php echo $group_name;?>">
                 <a href='<?php echo $hook_url ?>' id="tiaa-message-<?php echo $group_name;?>-a" >Get Message</a>
