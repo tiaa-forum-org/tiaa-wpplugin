@@ -29,6 +29,22 @@
  * confirmation step that doesn't exist today. Not an oversight — do not
  * "fix" this by adding wp_verify_nonce().
  *
+ * INCONSISTENT WITH F5, ON PURPOSE (N4, follow-up scan, 2026-08)
+ * -----------------------------------------------------------------
+ * TiaaHooks::skip_logout_confirmation() (SECURITY-REVIEW.md F5) requires
+ * the request be referred from the configured Discourse host before
+ * auto-skipping WP's logout confirmation on /wp-login.php?action=logout --
+ * specifically so a third-party page can't force-log-out a visiting member
+ * with no confirmation step. This route has no equivalent check at all, so
+ * that same force-logout is fully reachable here regardless of Referer.
+ * Reviewed and accepted as-is: logout-CSRF is low-impact (a forced logout
+ * is a nuisance, not a compromise -- see F5's own writeup), and the
+ * Wordfence-lockout resilience this route exists for depends on it staying
+ * reachable with no extra friction. If this call is ever revisited, the
+ * option is to gate this route the same way (TiaaHooks::referred_from_discourse())
+ * rather than adding a nonce, which would reintroduce the confirmation
+ * step this route exists to avoid.
+ *
  * NO REWRITE RULE
  * -----------------
  * Matches directly off REQUEST_URI on `init` instead of registering a

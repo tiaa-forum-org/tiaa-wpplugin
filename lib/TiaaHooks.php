@@ -91,6 +91,11 @@ class TiaaHooks {
 	 * reflects the page the link actually lives on — so this narrows the
 	 * auto-skip to links genuinely embedded in Discourse.
 	 *
+	 * NOTE this protection is specific to this route. `TiaaLogoutRoute`'s
+	 * `/tiaa-logout` endpoint has no equivalent check (N4, follow-up scan,
+	 * 2026-08) -- reviewed and accepted as a deliberate inconsistency, see
+	 * that class's docblock for why.
+	 *
 	 * Security is preserved either way: the nonce is still generated and will
 	 * be validated on the subsequent request. This only removes the manual
 	 * confirmation step, and only for the Discourse-originated case.
@@ -242,6 +247,15 @@ class TiaaHooks {
 	 * configured to overwrite it — if this site is ever put behind a proxy
 	 * that forwards the real client IP via a header, this will need updating
 	 * to read that header instead, or every caller will share one bucket.
+	 *
+	 * Confirmed with the maintainer (N3, follow-up scan, 2026-08) that
+	 * production has no reverse proxy in front of PHP — REMOTE_ADDR is the
+	 * real client IP today, so this is correct as written. That's an
+	 * infrastructure fact, not something this code can verify at runtime:
+	 * if that ever changes (a CDN, load balancer, or reverse proxy gets put
+	 * in front of PHP), this silently degrades to one shared bucket for
+	 * every visitor with no error or warning. Re-check this assumption
+	 * whenever the deployment topology changes.
 	 *
 	 * @since 0.0.13
 	 * @return bool
