@@ -28,16 +28,21 @@ window.onload = function() {
 
         });
     });
+    // This script is enqueued on every TIAA admin page, but these two
+    // elements only exist on the Screened Emails page -- null-check since
+    // getElementById() returns null everywhere else.
     const screenManageEmailButton = document.getElementById('tiaaManageScreenedEmails');
     const screenEmailDiv = document.getElementById('tiaaScreenedEmailsDiv');
 
-    screenManageEmailButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        const isExpanded = screenEmailDiv.style.display === 'block';
+    if (screenManageEmailButton && screenEmailDiv) {
+        screenManageEmailButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            const isExpanded = screenEmailDiv.style.display === 'block';
 
-        screenEmailDiv.style.display = isExpanded ? 'none' : 'block';
-        screenManageEmailButton.setAttribute('aria-expanded', !isExpanded); // Update for screen readers
-    });
+            screenEmailDiv.style.display = isExpanded ? 'none' : 'block';
+            screenManageEmailButton.setAttribute('aria-expanded', !isExpanded); // Update for screen readers
+        });
+    }
 };
 
 function fetchPingResults(ref, event) {
