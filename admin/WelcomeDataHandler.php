@@ -76,6 +76,7 @@ class WelcomeDataHandler {
 	 */
 	protected function handle_form_submission(): void {
 		if ( preg_grep( '/^cron_/', array_keys( $_POST ) ) ) {
+			check_admin_referer( 'tiaa_welcome_cron_action', '_wpnonce_welcome_cron' );
 			if ( isset( $_POST['cron_start'] ) ) {
 				$this->Util->schedule_cron();
 			} elseif ( isset( $_POST['cron_stop'] ) ) {

@@ -30,21 +30,25 @@ if (!isset($this) || !isset($this->Util) || !method_exists($this->Util, 'get_rec
     <div class="tiaa-flex-container">
         <div>
             <form method="post">
+				<?php wp_nonce_field( 'tiaa_welcome_cron_action', '_wpnonce_welcome_cron' ); ?>
 				<?php submit_button('Start Cron', 'primary', 'cron_start', false); ?>
             </form>
         </div>
         <div>
             <form method="post">
+				<?php wp_nonce_field( 'tiaa_welcome_cron_action', '_wpnonce_welcome_cron' ); ?>
 				<?php submit_button('Stop Cron', 'primary', 'cron_stop', false); ?>
             </form>
         </div>
         <div>
             <form method="post">
+				<?php wp_nonce_field( 'tiaa_welcome_cron_action', '_wpnonce_welcome_cron' ); ?>
 				<?php submit_button('Fire Cron Once', 'primary', 'cron_do_run', false); ?>
             </form>
         </div>
         <div>
             <form method="post">
+				<?php wp_nonce_field( 'tiaa_welcome_cron_action', '_wpnonce_welcome_cron' ); ?>
 				<?php submit_button('Get Cron Status', 'primary', 'get_cron_status', false); ?>
             </form>
         </div>
