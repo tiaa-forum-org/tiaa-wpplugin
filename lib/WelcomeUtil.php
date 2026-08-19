@@ -198,7 +198,10 @@ class WelcomeUtil {
 	public function get_cron_status(): string {
 		$timestamp = wp_next_scheduled( self::TIAA_CRON_HOOK );
 		if ( $timestamp ) {
-			$date_time = date( 'Y-m-d H:i:s', $timestamp );
+			// wp_next_scheduled() returns a UTC timestamp; wp_date() renders it
+			// in the site's configured timezone (Settings -> General), unlike
+			// a plain date() call which follows the server's default timezone.
+			$date_time = wp_date( 'Y-m-d H:i:s', $timestamp );
 			self::log_debug( 'Welcome cron status - scheduled at: ' . $date_time );
 
 			return 'scheduled at: ' . $date_time;
@@ -352,6 +355,8 @@ class WelcomeUtil {
 	private function is_within_days_range( string $created_at,
 		int $min_days, int $max_days, int $unit_seconds = DAY_IN_SECONDS ): bool {
 		$periods_elapsed = floor( ( time() - strtotime( $created_at ) ) / $unit_seconds );
+		self::log_debug( 'is_within_days date: ' . $created_at . ' min: ' . $min_days . ' max: ' .
+		                 $max_days . ' periods: ' . $periods_elapsed . ' unit: ' . $unit_seconds );
 		return $periods_elapsed >= $min_days && $periods_elapsed <= $max_days;
 	}
 	/**

@@ -56,7 +56,7 @@ if (!isset($this) || !isset($this->Util) || !method_exists($this->Util, 'get_rec
 
     <!-- Current cron status -->
     <div>
-        <p>At <?php echo date('Y-m-d H:i:s', time()); ?> cron status is:
+        <p>At <?php echo esc_html( wp_date( 'Y-m-d H:i:s' ) ); ?> cron status is:
 			<?php echo esc_html($cron_status); ?>
         </p>
     </div>
