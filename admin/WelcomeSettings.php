@@ -375,7 +375,46 @@ class WelcomeSettings {
             Use <strong>Hourly</strong> or <strong>Every 5 minutes</strong> for local testing only.
             After changing, save settings — the cron job will reschedule automatically.
         </p>
+		<?php if ( 'daily' !== $current ) : ?>
+			<?php
+			$unit_label = 'hourly' === $current ? 'hour' : '5-minute period';
+			$unit_seconds = 'hourly' === $current ? HOUR_IN_SECONDS : 300;
+			$max = isset( $options['days_since_joined_max'] ) ? (int) $options['days_since_joined_max'] : null;
+			?>
+            <p class="description" style="color:#a00; max-width: 40em;">
+                <strong>Note:</strong> with this interval selected, <em>Days Since Joined Min/Max</em>
+                below are read as counts of <strong><?php echo esc_html( $unit_label ); ?></strong> elapsed,
+                not calendar days — the same number means something much smaller than it looks.
+				<?php if ( null !== $max && $max > 0 ) : ?>
+                    Right now, a max of <strong><?php echo esc_html( (string) $max ); ?></strong> means
+                    about <strong><?php echo esc_html( self::format_duration( $max * $unit_seconds ) ); ?></strong>,
+                    not <?php echo esc_html( (string) $max ); ?> days. A member who joined further back than
+                    that will never match while this interval is selected.
+				<?php endif; ?>
+                Switch back to <strong>Daily</strong> to test the welcome-message content/send logic against
+                real (day-old-or-older) members; keep this interval only to test that the cron itself fires
+                on schedule, using thresholds sized for this unit and a genuinely recent test member.
+            </p>
+		<?php endif; ?>
         <?php
+    }
+
+    /**
+     * Formats a duration in seconds as a short human-readable string
+     * (e.g. "8.3 hours", "45 minutes") for the cron-interval testing notice.
+     *
+     * @since 0.0.16
+     * @param int $seconds Duration in seconds.
+     * @return string
+     */
+    private static function format_duration( int $seconds ): string {
+        if ( $seconds >= DAY_IN_SECONDS ) {
+            return round( $seconds / DAY_IN_SECONDS, 1 ) . ' days';
+        }
+        if ( $seconds >= HOUR_IN_SECONDS ) {
+            return round( $seconds / HOUR_IN_SECONDS, 1 ) . ' hours';
+        }
+        return round( $seconds / MINUTE_IN_SECONDS, 1 ) . ' minutes';
     }
     /**
 	 * Renders an input field for excluding Discourse groups from the Welcome feature.
