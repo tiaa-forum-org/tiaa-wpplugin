@@ -115,7 +115,8 @@ class LogSettings {
 	public function logging_options() : void {
 		?>
         <p class="log_options_section_tab">
-			<?php esc_html_e( 'These settings set the location of the log file and level to log at.', 'tiaa-wpplugin' ); ?>
+			<?php esc_html_e( 'These settings set the location of the log file and level to log at. ' .
+                    'This file needs to be writeable by WordPress.', 'tiaa-wpplugin' ); ?>
         </p>
 		<?php
 	}

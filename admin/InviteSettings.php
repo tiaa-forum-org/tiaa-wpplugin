@@ -148,11 +148,11 @@ class InviteSettings {
 		?>
         <p class="invite_to_forum_section_tab">
             This page controls the settings for the TIAA Forum Signup page. If there is no API Key/username,
-            the default connection settings will be used and the invite will be sent from that account.</p>
-        <p>
+            the default connection settings will be used and the invite will be sent from that account.
+        <br>
             If there is no Post ID, the default message will be used. If a Post ID is set, the message will be
             retrieved from the Discourse forum and added to the invitation email.
-        </p>
+        </br>
 		<?php
 	}
 
