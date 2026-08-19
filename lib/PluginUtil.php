@@ -162,6 +162,11 @@ trait PluginUtil {
 	 */
 	public function get_discourse_post_by_id(WP_REST_Request $request): string|WP_Error|WP_REST_Response|array {
 		$params = $request->get_params();
+		if ( empty( $params ) || empty( $params['post_id'] ) || empty( $params['option_group'] ) ) {
+			return new WP_REST_Response(
+				array( 'code' => 'invalid_call', 'message' => 'post_id and option_group are required' ), 400
+			);
+		}
 		$post_id = $params['post_id'];
 		$option_group = $params['option_group'];
 

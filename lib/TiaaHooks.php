@@ -445,11 +445,13 @@ class TiaaHooks {
 				'callback'             => array( $this, 'get_discourse_post_by_id' ),
 				'args'                 => array(
 					'post_id'      => array(
+						'required'          => true,
 						'validate_callback' => function( $param, $request, $key ) {
 							return is_numeric( $param );
 						},
 					),
 					'option_group' => array(
+						'required'          => true,
 						'validate_callback' => function( $param, $request, $key ) {
 							return is_string( $param );
 
