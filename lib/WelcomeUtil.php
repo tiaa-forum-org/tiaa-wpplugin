@@ -241,8 +241,20 @@ class WelcomeUtil {
 	public function run_cron() : void {
 		self::log_debug( 'Running welcome cron job...' );
 
-		$min_days        = $this->options['days_since_joined_min'];
-		$max_days        = $this->options['days_since_joined_max'];
+		// Cast defensively: these come straight from saved options as raw
+		// strings, and a blank settings field saves as '' -- not '0' -- which
+		// PHP's weak typing cannot coerce to is_within_days_range()'s int
+		// parameters and throws a TypeError instead. Blank min defaults to "no
+		// minimum" (0); blank max defaults to a large-but-sane "no effective
+		// maximum" -- not (int) '' === 0 (would silently match nobody) and not
+		// PHP_INT_MAX (max_days is also passed to get_recent_members(), which
+		// builds strtotime("-{$max_days} days") -- an astronomically large
+		// value there breaks strtotime entirely).
+		$raw_min      = $this->options['days_since_joined_min'] ?? '';
+		$raw_max      = $this->options['days_since_joined_max'] ?? '';
+		$no_max_days  = 3650; // ~10 years: effectively unbounded for this feature.
+		$min_days     = is_numeric( $raw_min ) ? (int) $raw_min : 0;
+		$max_days     = is_numeric( $raw_max ) ? (int) $raw_max : $no_max_days;
 		$unit_seconds = $this->get_interval_seconds();
 
 		$post_id = $this->options['post_id'];
