@@ -26,11 +26,14 @@ This plugin consolidates various functions previously handled by Google Apps Scr
 |  Setting      | Purpose                                                                                                                                                                                                                                      |
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Cookie Domain | Shared domain used for cross-subdomain cookies between WordPress and Discourse (e.g. `.tiaa-forum.org` for production). Can be locked via the `TIAA_COOKIE_DOMAIN` constant in `wp-config.php` to prevent accidental changes.                |
-| Contact Email | Site contact email address.                                                                                                                                                                                                                  |
+| Contact Email | Site contact email address. Displayed anywhere via `[tiaa_contact_email]`, rendered as a `mailto:` link.                                                                                                                                    |
 | Funding Level | Reserve status (blue / green / yellow / red) — colors for the "Contribute" button on the front end header.                                                                                                                                   |
 | Forum Stats   | Member, topic, post, and category counts, plus an as-of date. Updated manually and displayed anywhere (e.g. Home Page) via `[tiaa_stat field="..."]` shortcodes. Current numbers can be obtained via a Discourse Data Explorer plugin query. |
 
-- Also drives two front-end automations: styling the "Contribute" button by funding level, and auto-filling the "Go to Forum" button's link with the connected Discourse URL.
+- Also drives front-end automations that update automatically when a Site Setting changes — no code or template edits needed:
+  - **Funding Level** → colors the `.tiaa-contribute` button (Elementor CSS class) via an inline `<style>` block on `wp_head`.
+  - **Discourse URL** (read from WP-Discourse's own settings, not stored here) → sets the `href` of `.tiaa-go-to-forum` links/buttons (Elementor CSS class) via inline `<script>` on `wp_footer`.
+  - **Contact Email** → available via the `[tiaa_contact_email]` shortcode, same pattern as the Forum Stats shortcodes above.
 
 ### 4. **Web Hook & API Integrations**
 - Uses webhooks for real-time processing of forms.

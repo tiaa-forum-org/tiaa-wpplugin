@@ -31,15 +31,30 @@
  * [tiaa_stat field="posts"]       →  value of tiaa_stat_posts (comma-formatted)
  * [tiaa_stat field="categories"]  →  value of tiaa_stat_categories (comma-formatted)
  * [tiaa_stat field="as_of"]       →  value of tiaa_stat_as_of (formatted date)
+ * [tiaa_contact_email]            →  tiaa_contact_email as a mailto: link
  *
- * All shortcodes output a <span class="tiaa-stats"> wrapper for consistent styling.
- * Drop these into any Elementor text or heading widget. Update the values
- * in the admin screen and the front end updates automatically — no code change.
+ * All shortcodes output a <span class="tiaa-stats"> (or, for contact email, an
+ * <a class="tiaa-contact-email">) wrapper for consistent styling. Drop these
+ * into any Elementor text or heading widget. Update the values in the admin
+ * screen and the front end updates automatically — no code change.
  *
  * INTEGRATION WITH OPTIONS-PAGE.PHP
  * ----------------------------------
  * See "Edit admin/options-page.php" section in the handoff document for the
  * two changes needed to wire this class into the existing tab navigation.
+ *
+ * WHY THIS CLASS LIVES IN lib/, NOT admin/
+ * -----------------------------------------
+ * Everything under admin/ is only required when is_admin() is true (see the
+ * `if ( is_admin() )` gate in admin/admin.php) — fine for settings screens,
+ * but this class also has front-end responsibilities: the wp_head/wp_footer
+ * output hooks, the [tiaa_stat] and [tiaa_contact_email] shortcodes, and the
+ * static get_cookie_domain()/get_discourse_url() helpers that
+ * TiaaReturnUrlCookie, TiaaMemberCookie, and TiaaHooks call on every
+ * front-end request. It's instantiated unconditionally in TiaaBase — moving
+ * it under admin/ would silently break all of that outside wp-admin.
+ * admin/options-page.php instantiates a second copy purely to call
+ * render_tab() when rendering the settings screen.
  *
  * @package TIAAPlugin
  * @subpackage TIAAPlugin\lib
@@ -69,6 +84,7 @@ class TiaaSiteSettings {
 	const KEY_STAT_AS_OF      = 'tiaa_stat_as_of';
 
 	const SHORTCODE_STAT = 'tiaa_stat';
+	const SHORTCODE_CONTACT_EMAIL = 'tiaa_contact_email';
 
 	/** WP-Discourse options key — Discourse URL is owned by that plugin, not us. */
 	const WPDC_OPTIONS_KEY = 'discourse_connect';
@@ -76,6 +92,7 @@ class TiaaSiteSettings {
 	public function __construct() {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_shortcode( self::SHORTCODE_STAT, [ $this, 'render_stat_shortcode' ] );
+		add_shortcode( self::SHORTCODE_CONTACT_EMAIL, [ $this, 'render_contact_email_shortcode' ] );
 		add_action( 'wp_footer', [ $this, 'output_forum_button_script' ] );
 		add_action( 'wp_head',   [ $this, 'output_contribute_color_style' ] );
 	}
@@ -135,7 +152,11 @@ class TiaaSiteSettings {
 		       name="<?php echo esc_attr( self::KEY_CONTACT_EMAIL ); ?>"
 		       value="<?php echo esc_attr( $value ); ?>"
 		       class="regular-text">
-		<p class="description">Site contact email used in automated messages and the Contact page.</p>
+		<p class="description">
+			Site contact email used in automated messages and the Contact page.
+			Displayed anywhere via the <code>[tiaa_contact_email]</code> shortcode
+			(rendered as a <code>mailto:</code> link).
+		</p>
 		<?php
 	}
 
@@ -249,6 +270,18 @@ class TiaaSiteSettings {
 			return '';
 		}
 		return '<span class="tiaa-stats">' . esc_html( number_format_i18n( (int) get_option( $key, 0 ) ) ) . '</span>';
+	}
+
+	/**
+	 * [tiaa_contact_email]
+	 * Outputs the site contact email as a mailto: link.
+	 */
+	public function render_contact_email_shortcode(): string {
+		$email = get_option( self::KEY_CONTACT_EMAIL, '' );
+		if ( ! $email ) {
+			return '';
+		}
+		return '<a href="mailto:' . esc_attr( $email ) . '" class="tiaa-contact-email">' . esc_html( $email ) . '</a>';
 	}
 
 	public function sanitize_funding_level( string $value ): string {
