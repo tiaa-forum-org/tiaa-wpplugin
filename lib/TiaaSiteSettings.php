@@ -195,13 +195,13 @@ class TiaaSiteSettings {
 		<p class="description">
 			Displayed on the homepage statistics card. Update manually when Discourse
 			reports change. Numbers are formatted with comma-separated thousands on the front end.
-			Use in Elementor:
+			<br>Use in Elementor:
 			<code>[tiaa_stat field="members"]</code>
-			<code>[tiaa_stat field="topics"]</code>
+			<code>[tiaa_stat field="topics"]</code><br>&nbsp;&nbsp;
 			<code>[tiaa_stat field="posts"]</code>
 			<code>[tiaa_stat field="categories"]</code>
-			<code>[tiaa_stat field="as_of"]</code><br>
-			All shortcodes output a <code>&lt;span class="tiaa-stats"&gt;</code> wrapper for styling.
+			<code>[tiaa_stat field="as_of"]</code>
+			<br>All shortcodes output a <code>&lt;span class="tiaa-stats"&gt;</code> wrapper for styling.
 		</p>
 		<?php
 	}
