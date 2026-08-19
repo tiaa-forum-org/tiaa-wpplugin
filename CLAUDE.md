@@ -36,7 +36,8 @@ tiaa-wpplugin/
 │   ├── WelcomeUtil.php        ← welcome message logic
 │   ├── ScreenEmailsUtil.php   ← screened emails DB logic
 │   ├── PluginUtil.php         ← shared utility trait
-│   └── options-utilities.php  ← WP options helpers
+│   ├── options-utilities.php  ← WP options helpers
+│   └── TIAAFile.php           ← Analog log handler (namespace TIAAPlugin\Analog\Handler); TIAA-specific, not a vendor file
 ├── admin/                     ← WP admin UI (tabs pattern)
 │   ├── admin.php              ← admin bootstrap
 │   ├── admin-menu.php         ← menu registration
@@ -264,8 +265,13 @@ validator. Side effect: Discourse credentials must be re-entered in WelcomeSetti
 The `validator()` method in `FormHandler` needs a deeper audit.
 
 **Logger unreliability**
-`TIAAFile.php` lives under `\Analog` but belongs in the plugin library.
 Logger is not reliably initialized for all `\PluginUtil` call paths — needs auditing.
+(`TIAAFile.php` moved from `vendor_prefixed/` to `lib/` on 2026-08-19 — it's TIAA-specific
+code that never went through the php-prefixer tool and doesn't exist in the upstream
+`analog/analog` package, so leaving it in `vendor_prefixed/` risked silent deletion if
+that tree were ever regenerated. Namespace kept as `TIAAPlugin\Analog\Handler` for a
+minimal diff — no call-site changes needed beyond the `require_once` path in
+`vendor_prefixed/autoload.php`.)
 
 ---
 

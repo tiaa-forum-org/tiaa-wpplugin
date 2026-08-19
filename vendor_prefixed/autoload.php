@@ -42,4 +42,5 @@ require_once TIAA_PLUGIN_PATH . 'vendor_prefixed/psr/log/src/LoggerAwareTrait.ph
 
 // added for TIAAPlugin to allow for changing level to name rather
 // than just a number
-require_once TIAA_PLUGIN_PATH . 'vendor_prefixed/analog/analog/lib/Analog/Handler/TIAAFile.php';
+// lives in lib/, not vendor_prefixed/ — it's TIAA-specific code, not a vendored dependency
+require_once TIAA_PLUGIN_PATH . 'lib/TIAAFile.php';

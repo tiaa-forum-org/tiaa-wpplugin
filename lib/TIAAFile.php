@@ -1,6 +1,9 @@
 <?php
 /*
- * TODO - this file should probably be removed from the vendor directory and put in the plugin library
+ * TIAA-specific Analog log handler — not a vendor file. It never went through the
+ * php-prefixer tool (see vendor_prefixed/analog/analog for those) and doesn't exist in
+ * the upstream analog/analog package, so it lives in lib/ instead of vendor_prefixed/
+ * to avoid being silently dropped if that vendor tree is ever regenerated.
  * TODO - probably would be better if handled less as a static function and more as an object
  * with links back to vendor for support
  * Same as the Analog file handler except that it uses log level names instead of
