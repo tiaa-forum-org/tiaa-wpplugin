@@ -20,17 +20,29 @@ This plugin consolidates various functions previously handled by Google Apps Scr
 - Helps onboard members by explaining key features of the forum.
 - Ensures engagement and retention by encouraging participation.
 
-### 3. **Web Hook & API Integrations**
+### 3. **Site Settings**
+- Centralized settings page for site-wide configuration (`Admin > TIAA Forum > Site Settings`).
+
+|  Setting      | Purpose                                                                                                                                                                                                                                      |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Cookie Domain | Shared domain used for cross-subdomain cookies between WordPress and Discourse (e.g. `.tiaa-forum.org` for production). Can be locked via the `TIAA_COOKIE_DOMAIN` constant in `wp-config.php` to prevent accidental changes.                |
+| Contact Email | Site contact email address.                                                                                                                                                                                                                  |
+| Funding Level | Reserve status (blue / green / yellow / red) — colors for the "Contribute" button on the front end header.                                                                                                                                   |
+| Forum Stats   | Member, topic, post, and category counts, plus an as-of date. Updated manually and displayed anywhere (e.g. Home Page) via `[tiaa_stat field="..."]` shortcodes. Current numbers can be obtained via a Discourse Data Explorer plugin query. |
+
+- Also drives two front-end automations: styling the "Contribute" button by funding level, and auto-filling the "Go to Forum" button's link with the connected Discourse URL.
+
+### 4. **Web Hook & API Integrations**
 - Uses webhooks for real-time processing of forms.
 - Custom PHP handlers improve error handling and user feedback.
 - Designed to work independently of Elementor but offers integration where needed.
 
-### 4. **Admin & Plugin Configuration**
+### 5. **Admin & Plugin Configuration**
 - Provides a centralized admin panel for managing plugin settings.
 - Supports configurable parameters for integration with Discourse.
 - Implements WordPress cron jobs for scheduled tasks.
 
-### 5. **Wordfence-Safe Logout Route (`/tiaa-logout`)**
+### 6. **Wordfence-Safe Logout Route (`/tiaa-logout`)**
 - Added in v0.0.12 (`lib/TiaaLogoutRoute.php`).
 - **Why it exists:** the site's logout link used to point at
   `/wp-login.php?action=logout`. Wordfence's Brute Force Protection locks out
