@@ -231,7 +231,7 @@ class Discourse {
 	 * @return WP_REST_Response|WP_Error A list of recent members or an error object on failure.
 	 */
 	public static function get_recent_members(int $max_days) : null|array  {
-		self::log_debug( "get welcome message: " . $max_days );
+		self::log_debug( "get_recent_members max_days: " . $max_days );
 
 		$cs = self::get_connection_options_by_group( TIAA_WELCOME_GROUP );
 		if (is_wp_error($cs)) {
