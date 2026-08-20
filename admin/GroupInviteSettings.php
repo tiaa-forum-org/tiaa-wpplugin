@@ -362,6 +362,10 @@ class GroupInviteSettings {
 	 * Topic" preview link below is purely so the admin can confirm the ID
 	 * points at the intended discussion.
 	 *
+	 * The linked topic must be built a specific way or invite sends using
+	 * it will fail -- see README.md, "Setting up an Invite Topic ID", for
+	 * the process and the reasoning behind it.
+	 *
 	 * @since  0.0.19
 	 * @access public
 	 * @param  array $args {
@@ -378,7 +382,7 @@ class GroupInviteSettings {
         $this->form_helper->input(
 			'topic_id',
 			$option_group_name,
-			'Invitation Topic ID',
+			'Invitation Topic ID. See README.md ("Setting up an Invite Topic ID") for how the topic needs to be created.',
 			'number',
 			null,
 	        array("style" => 'width: 5em;')

@@ -15,6 +15,42 @@ This plugin consolidates various functions previously handled by Google Apps Scr
 - Allows invitation to a particular Discourse group to allow for special onboarding or to allow changing the home group for members of a particular primary group
 - Detects duplicate email addresses and directs users to the password reset process.
 
+#### Setting up an Invite Topic ID
+
+Both the Signup tab and each Group Invite tab have an optional **Topic ID**
+field. When set, a new member lands on that Discourse topic right after
+accepting their invite — it's typically used as a "start here" post
+tailored to that particular invite group.
+
+**Why the topic has to be created a specific way, not just any topic ID:**
+Discourse's invite API checks whether the linked topic is visible *as if
+the recipient hadn't joined yet* — regardless of how privileged the
+account sending the invite is. If the topic lives in a category that
+isn't readable by "Everyone" (for example, one restricted to logged-in
+members only), every invite send using that Topic ID fails, even though
+the exact same topic links without any problem when an admin creates the
+invite manually from inside Discourse's own web UI (confirmed 2026-08-20
+— that flow doesn't go through the same check the API does).
+
+**Process for creating a topic to use as an invite Topic ID** (confirmed
+working 2026-08-20):
+
+1. Create a new topic in the `#public` category.
+2. Write the post as you'd want a new invite recipient to see it — this
+   is the first thing they'll land on after accepting.
+3. Once the post is finished, open the topic's settings and change its
+   category to `unlisted`.
+4. Note the topic ID from the URL — that's the value to enter in the
+   Topic ID field on the Signup or Group Invite settings tab.
+
+Creating the topic in `#public` first, then moving it to `unlisted`,
+keeps the category's read permission set to "Everyone" — satisfying the
+invite API's visibility check above — while `unlisted` hides the topic
+from search, the topic list, and ordinary browsing. In practice this
+means the topic is only reachable by someone who has the direct link (as
+the invite itself provides), even though it isn't gated by a logged-in-only
+permission the way a normal restricted category would be.
+
 ### 2. **Welcome Message Automation**
 - Sends personalized Discourse messages to new users.
 - Helps onboard members by explaining key features of the forum.

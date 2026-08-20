@@ -270,13 +270,17 @@ class InviteSettings {
 	 * "Get Topic" preview link below is purely so the admin can confirm the
 	 * ID points at the intended discussion.
 	 *
+	 * The linked topic must be built a specific way or invite sends using
+	 * it will fail -- see README.md, "Setting up an Invite Topic ID", for
+	 * the process and the reasoning behind it.
+	 *
 	 * @return void
 	 */
 	public function topic_id_input(): void {
 		$this->form_helper->input(
 			'topic_id',
 			TIAA_INVITE_GROUP,
-			'Invitation Topic ID - leave blank if not used',
+			'Invitation Topic ID - leave blank if not used. See README.md ("Setting up an Invite Topic ID") for how the topic needs to be created.',
 			'number',
 			null,
 			array( 'style' => 'width: 6em;' )
