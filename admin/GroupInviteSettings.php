@@ -197,7 +197,7 @@ class GroupInviteSettings {
 	    );
 	    add_settings_field(
 		    'post_id',
-		    'Discourse message post ID - Discourse message post ID, limits the message to 1000 characters',
+		    'Discourse message post ID',
 		    array(
 			    $this,
 			    'post_id_input'
@@ -333,7 +333,7 @@ class GroupInviteSettings {
         $this->form_helper->input(
 			'post_id',
 			$option_group_name,
-			'Invitation Post Message ID',
+			'Invitation Post Message ID  - Discourse limits the message to 1000 characters',
 			'number',
 			null,
 	        array("style" => 'width: 5em;')
