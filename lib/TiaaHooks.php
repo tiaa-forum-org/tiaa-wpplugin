@@ -281,7 +281,14 @@ class TiaaHooks {
 	 * This method processes the request payload (either JSON-encoded or form-encoded),
 	 * validates required parameters (name and email), and sends an invitation
 	 * to the Discourse platform. It also handles optional parameters such as
-	 * group, message, or topic.
+	 * group, message, or topic. If no message is submitted, it falls back to
+	 * the Post ID configured for the invite group (InviteSettings /
+	 * GroupInviteSettings): the text of that Discourse post after its
+	 * "BeginMessage ----" marker line becomes the invite's custom message
+	 * (see PluginUtil::parse_message(), same convention used by
+	 * WelcomeUtil's welcome-message send and the "Get Message" admin
+	 * preview). With no message, no Post ID, or no marker found, Discourse's
+	 * own default invite template is used.
 	 *
 	 * @param WP_REST_Request $request The REST API request containing the invitation data.
 	 *
@@ -402,6 +409,32 @@ class TiaaHooks {
 			$req_data['api_key'] = $cs['api_key'];
 			if (!empty($data['message'])) {
 				$req_data['message'] = $data['message'];
+			} else {
+				// No explicit message submitted with the form -- fall back to the
+				// Post ID configured for this invite group (InviteSettings /
+				// GroupInviteSettings), if any. Leaving Post ID blank means
+				// Discourse's own default invite template is used instead.
+				$group_options = self::get_options_by_group( $option_group );
+				$post_id = $group_options['post_id'] ?? null;
+				if ( ! empty( $post_id ) ) {
+					$post_result = Discourse::get_discourse_post_by_id( (int) $post_id, $option_group );
+					if ( is_wp_error( $post_result ) || $post_result->get_status() !== 200 ) {
+						self::log_wp_rest_response_error( 'invite message post_id ' . $post_id . ' fetch failed: ',
+							$post_result, __FUNCTION__, __CLASS__, __LINE__ );
+					} else {
+						$post_json = json_decode( $post_result->get_data()['body_response'] ?? '', true );
+						// Same convention as the welcome-message flow (WelcomeUtil::send_welcome_messages)
+						// and the "Get Message" admin preview: only the text after a
+						// "BeginMessage ----" marker line is the actual message -- anything
+						// before it is editorial/setup notes on the Discourse post itself.
+						$message = self::parse_message( $post_json['raw'] ?? null );
+						if ( ! empty( $message ) ) {
+							$req_data['message'] = $message;
+						} else {
+							self::log_error( "invite message post_id $post_id missing 'BeginMessage ----' marker or has no content" );
+						}
+					}
+				}
 			}
 			if (!empty($data['topic'])) {
 				$req_data['topic'] = $data['topic'];
