@@ -270,28 +270,13 @@ class InviteSettings {
 	 * "Get Topic" preview link below is purely so the admin can confirm the
 	 * ID points at the intended discussion.
 	 *
-	 * IMPORTANT (confirmed 2026-08-20): the topic's category must be
-	 * readable by "Everyone" in Discourse -- not merely by trust_level_0 or
-	 * any other logged-in-only permission. Discourse's invites.json API
-	 * checks topic visibility as if the invite recipient were still
-	 * anonymous (they haven't joined yet), regardless of how privileged the
-	 * *sending* account is -- confirmed this fails identically for both a
-	 * non-admin API key and a full Discourse admin account. A category
-	 * that's technically open to any signed-up member but not flagged
-	 * "Everyone" (Discourse marks these read_restricted) will make every
-	 * invite send using this Topic ID fail with a 403 "You are not
-	 * permitted to view the requested resource" (invalid_access), even
-	 * though the same admin can link that topic manually from Discourse's
-	 * own web UI without issue -- that flow doesn't go through this API
-	 * check.
-	 *
 	 * @return void
 	 */
 	public function topic_id_input(): void {
 		$this->form_helper->input(
 			'topic_id',
 			TIAA_INVITE_GROUP,
-			'Invitation Topic ID - leave blank if not used. Must be a topic in a category readable by "Everyone" (not just logged-in members) or invite sends will fail.',
+			'Invitation Topic ID - leave blank if not used',
 			'number',
 			null,
 			array( 'style' => 'width: 6em;' )

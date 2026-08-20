@@ -450,19 +450,6 @@ class TiaaHooks {
 				// is passed straight through with no content fetched or embedded
 				// -- the "Get Topic" admin preview is what fetches title/excerpt,
 				// purely so the admin can confirm they've got the right topic.
-				//
-				// GOTCHA (confirmed 2026-08-20): that topic's category must be
-				// readable by "Everyone" in Discourse. invites.json checks topic
-				// visibility as if the recipient is still anonymous (pre-signup),
-				// regardless of how privileged the sending account is -- a
-				// category open only to trust_level_0 (or any other logged-in-only
-				// permission) is enough to make Discourse flag it read_restricted
-				// and reject every invite send here with a 403 invalid_access,
-				// even for a full Discourse admin's own credentials. Same topic
-				// links fine when created by an admin from Discourse's own web UI
-				// -- that flow doesn't go through this API check. See the field
-				// docblocks in InviteSettings::topic_id_input() /
-				// GroupInviteSettings::topic_id_input() for the admin-facing note.
 				$topic_id = $group_options['topic_id'] ?? null;
 				if ( ! empty( $topic_id ) ) {
 					$req_data['topic'] = $topic_id;

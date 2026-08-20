@@ -118,18 +118,6 @@ class Discourse {
 	 * @TODO Improve documentation for additional behavior.
 	 * @TODO Consider moving this method outside the class if needed.
 	 *
-	 * GOTCHA (confirmed 2026-08-20) -- topic_id: Discourse's /invites.json
-	 * validates the linked topic's visibility as if the recipient were still
-	 * anonymous (pre-signup), no matter how privileged $api_key/$username
-	 * are -- confirmed identical 403 for both a non-admin key and a full
-	 * Discourse admin account. If the topic's category isn't readable by
-	 * "Everyone" (e.g. restricted to trust_level_0 or any other
-	 * logged-in-only permission -- Discourse flags these read_restricted),
-	 * every send here fails with 403 "You are not permitted to view the
-	 * requested resource" (invalid_access), even though the same topic
-	 * links fine when an admin creates the invite from Discourse's own web
-	 * UI -- that flow doesn't go through this same check.
-	 *
 	 * @param WP_REST_Request $request The REST request containing the invite details,
 	 *                                 such as email, custom message, group, and topic.
 	 *

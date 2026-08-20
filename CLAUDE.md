@@ -258,23 +258,6 @@ add_settings_field). Admin design mirrors the WP-Discourse plugin layout intenti
 
 ## Known Issues
 
-**Invite Topic ID must point at a category readable by "Everyone"**
-Confirmed 2026-08-20: Discourse's `/invites.json` API validates the linked
-`topic_id`'s visibility as if the invite recipient were still anonymous
-(pre-signup) — regardless of how privileged the *sending* API key/username
-are. A category open only to `trust_level_0` or any other logged-in-only
-permission (Discourse flags these `read_restricted`) makes every invite
-send using that Topic ID fail with `403 "You are not permitted to view the
-requested resource"` (`invalid_access`) — confirmed identical for both a
-low-privilege API key and a full Discourse admin account. The same topic
-links fine when an admin creates the invite manually from Discourse's own
-web UI; that flow doesn't go through this same check. Configuring a Topic
-ID on the Invite / Group Invite tabs (`InviteSettings.php`,
-`GroupInviteSettings.php`) requires the target topic's category to be
-readable by "Everyone" in Discourse's category permissions, not just by
-registered members. See the docblocks on `Discourse::send_discourse_invite()`,
-`TiaaHooks::invite_to_discourse()`, and the two `topic_id_input()` methods.
-
 **Logger unreliability**
 Logger is not reliably initialized for all `\PluginUtil` call paths — needs auditing.
 (`TIAAFile.php` moved from `vendor_prefixed/` to `lib/` on 2026-08-19 — it's TIAA-specific
