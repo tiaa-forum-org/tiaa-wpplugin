@@ -57,7 +57,7 @@ class SettingsValidator {
 		add_filter( 'tiaa_validate_post_id', array( $this, 'validate_post_id' ) );
 		add_filter( 'tiaa_validate_username', array( $this, 'validate_username' ) );
 		add_filter( 'tiaa_validate_url_blank_ok', array( $this, 'validate_url_blank_ok' ) );
-		add_filter( 'tiaa_validate_api_blank_ok', array( $this, 'validate_api_key_blank_ok' ) );
+		add_filter( 'tiaa_validate_api_key_blank_ok', array( $this, 'validate_api_key_blank_ok' ) );
 		add_filter( 'tiaa_validate_username_blank_ok', array( $this, 'validate_username_blank_ok' ) );
 		add_filter( 'tiaa_validate_post_id_blank_ok', array( $this, 'validate_post_id_blank_ok' ) );
 		add_filter( 'tiaa_validate_group_list', array( $this, 'validate_group_list' ) );

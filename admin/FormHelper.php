@@ -166,4 +166,32 @@ class FormHelper {
 		}
 		return $output;
 	}
+
+	/**
+	 * Validates and sanitizes options, but treats a blank field as valid
+	 * (rather than an error) for any key that has a '_blank_ok' validation
+	 * filter registered -- used by tabs where blank url/api_key/username
+	 * are meant to fall back to the Connection tab's values at send time
+	 * (see Discourse::get_connection_options_by_group()).
+	 *
+	 * Falls back to the key's regular 'tiaa_validate_{key}' filter when no
+	 * '_blank_ok' variant is registered for it (e.g. cron_interval), same
+	 * as validate_options() above.
+	 *
+	 * @since 0.0.20
+	 * @param array $inputs Array of options to validate.
+	 * @return array Returns the sanitized options.
+	 */
+	public function validate_options_blank_ok( array $inputs ) : array {
+		$output = array();
+
+		if ( ! empty( $inputs ) ) {
+			foreach ( $inputs as $key => $input ) {
+				$blank_ok_filter = 'tiaa_validate_' . $key . '_blank_ok';
+				$filter          = has_filter( $blank_ok_filter ) ? $blank_ok_filter : 'tiaa_validate_' . $key;
+				$output[ $key ]  = apply_filters( $filter, $input );
+			}
+		}
+		return $output;
+	}
 }

@@ -258,12 +258,6 @@ add_settings_field). Admin design mirrors the WP-Discourse plugin layout intenti
 
 ## Known Issues
 
-**WelcomeSettings array coercion**
-`WelcomeSettings.php` uses `validate_options` instead of `validate_options_blank_ok`
-because `group_list` (an array field) gets coerced to a string under the blank-ok
-validator. Side effect: Discourse credentials must be re-entered in WelcomeSettings.
-The `validator()` method in `FormHandler` needs a deeper audit.
-
 **Logger unreliability**
 Logger is not reliably initialized for all `\PluginUtil` call paths — needs auditing.
 (`TIAAFile.php` moved from `vendor_prefixed/` to `lib/` on 2026-08-19 — it's TIAA-specific

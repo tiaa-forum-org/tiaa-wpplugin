@@ -202,7 +202,7 @@ class WelcomeSettings {
 			TIAA_WELCOME_GROUP,
 			array(
 				$this->form_helper,
-				'validate_options', // Note: Known bug described in README-known-bugs.md.
+				'validate_options_blank_ok',
 			)
 		);
 
@@ -241,7 +241,7 @@ class WelcomeSettings {
 		$this->form_helper->input(
 			'url',
 			TIAA_WELCOME_GROUP,
-			'URL - must be set',
+			'URL - leave blank to use connection default',
 			'url'
 		);
 	}
@@ -258,7 +258,7 @@ class WelcomeSettings {
 		$this->form_helper->input(
 			'api_key',
 			TIAA_WELCOME_GROUP,
-			'API Key - must be set',
+			'API Key - leave blank to use the connection default',
 		);
 	}
 	/**
@@ -273,7 +273,7 @@ class WelcomeSettings {
 		$this->form_helper->input(
 			'username',
 			TIAA_WELCOME_GROUP,
-			'Username - must be set',
+			'Username - leave blank to use connection default',
 			'text',
             null,
 			 array( 'style' => 'width: 10em;' )
