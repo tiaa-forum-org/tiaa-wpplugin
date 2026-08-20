@@ -101,7 +101,8 @@ Screened email section CSS
     padding-bottom: 5px;
 }
 .tiaa-ping-discourse-class,
-.tiaa-message-discourse-class {
+.tiaa-message-discourse-class,
+.tiaa-topic-discourse-class {
     margin-top: 0px;
 }
 /**

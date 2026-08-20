@@ -42,6 +42,7 @@ class OptionsUtilities {
 				'api_key'         => '',
 				'username'        => '',
 				'invite_post_id'  => '',
+				'topic_id'        => '',
 			),
 		TIAA_GROUP_LIST_GROUP =>
 			array(
@@ -92,6 +93,7 @@ class OptionsUtilities {
 				'api_key'        => '',
 				'username'       => '',
 				'invite_post_id' => '',
+				'topic_id'       => '',
 			),
 	);
 

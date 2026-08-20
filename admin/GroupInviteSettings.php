@@ -207,6 +207,18 @@ class GroupInviteSettings {
 		    array('option_group_name' => $option_group_name,
                 'group_name' => $group_name)
 	    );
+	    add_settings_field(
+		    'topic_id',
+		    'Discourse topic ID',
+		    array(
+			    $this,
+			    'topic_id_input'
+		    ),
+		    $option_group_name,
+		    $section_name,
+		    array('option_group_name' => $option_group_name,
+                'group_name' => $group_name)
+	    );
 	    register_setting(
 		    $option_group_name,
 		    $option_group_name,
@@ -340,5 +352,50 @@ class GroupInviteSettings {
             </div>
 			<?php
 		} //  if ($options['post_id'] > 10)
+	}
+
+	/**
+	 * Creates topic ID input field for group settings.
+	 *
+	 * Unlike Post ID, no content is fetched or embedded at send time -- the
+	 * ID is passed straight through to Discourse's invite API. The "Get
+	 * Topic" preview link below is purely so the admin can confirm the ID
+	 * points at the intended discussion.
+	 *
+	 * @since  0.0.19
+	 * @access public
+	 * @param  array $args {
+	 *     Array of field arguments.
+	 *
+	 *     @type string $option_group_name The name of the option group.
+	 *     @type string $group_name        The name of the group.
+	 * }
+	 * @return void
+	 */
+	public function topic_id_input(array $args) : void {
+		$group_name = $args['group_name'];
+		$option_group_name = $args['option_group_name'];
+        $this->form_helper->input(
+			'topic_id',
+			$option_group_name,
+			'Invitation Topic ID',
+			'number',
+			null,
+	        array("style" => 'width: 5em;')
+        );
+
+		$options = self::get_options_by_group($option_group_name);
+        // only display options if topic_id has been set
+		if (isset($options['topic_id']) && $options['topic_id'] > 1) {
+			$hook_url = site_url("/wp-json/tiaa_wpplugin/v1/get_discourse_topic/" .
+                    "?topic_id={$options['topic_id']}&option_group=$option_group_name")
+                . '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
+			?>
+            <div class="wrap tiaa-topic-discourse-class" id="tiaa-topic-<?php echo $group_name;?>">
+                <a href='<?php echo $hook_url ?>' id="tiaa-topic-<?php echo $group_name;?>-a" >Get Topic</a>
+                <div id="tiaa-topic-<?php echo $group_name;?>-results" class="tiaa-message-results-off">Topic div</div>
+            </div>
+			<?php
+		} //  if ($options['topic_id'] > 1)
 	}
 }

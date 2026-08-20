@@ -126,6 +126,14 @@ class InviteSettings {
 			'invite_settings_section'
 		);
 
+		add_settings_field(
+			'topic_id',
+			'Discourse topic ID',
+			array( $this, 'topic_id_input' ),
+			TIAA_INVITE_GROUP,
+			'invite_settings_section'
+		);
+
 		register_setting(
 			TIAA_INVITE_GROUP,
 			TIAA_INVITE_GROUP,
@@ -152,6 +160,9 @@ class InviteSettings {
         <br />
             If there is no Post ID, the default message will be used. If a Post ID is set, the message will be
             retrieved from the Discourse forum and added to the invitation email.
+        <br />
+            If there is no Topic ID, the invite is not linked to a topic. If a Topic ID is set, the invite will
+            link to that topic when accepted.
         </p>
 		<?php
 	}
@@ -244,6 +255,42 @@ class InviteSettings {
             <div class="wrap tiaa-message-discourse-class" id="tiaa-message1">
                 <a href='<?php echo esc_url( $hook_url ); ?>' id="tiaa-message1-a">Get Message</a>
                 <div id="tiaa-message1-results" class="tiaa-message-results-off">Message div</div>
+            </div>
+			<?php
+		}
+	}
+
+	/**
+	 * Render the input field for the Discourse topic ID.
+	 *
+	 * This field allows the admin to link an invite to a specific Discourse
+	 * topic. Unlike Post ID, no content is fetched or embedded at send time
+	 * -- the ID is passed straight through to Discourse's invite API. The
+	 * "Get Topic" preview link below is purely so the admin can confirm the
+	 * ID points at the intended discussion.
+	 *
+	 * @return void
+	 */
+	public function topic_id_input(): void {
+		$this->form_helper->input(
+			'topic_id',
+			TIAA_INVITE_GROUP,
+			'Invitation Topic ID - leave blank if not used',
+			'number',
+			null,
+			array( 'style' => 'width: 6em;' )
+		);
+
+		$options = self::get_options_by_group( TIAA_INVITE_GROUP );
+
+		// Display additional options only if `topic_id` is set.
+		if ( isset( $options['topic_id'] ) && $options['topic_id'] > 1 ) {
+			$hook_url = site_url() . "/wp-json/tiaa_wpplugin/v1/get_discourse_topic/?topic_id={$options['topic_id']}&option_group=tiaa_invite"
+				. '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
+			?>
+            <div class="wrap tiaa-topic-discourse-class" id="tiaa-topic1">
+                <a href='<?php echo esc_url( $hook_url ); ?>' id="tiaa-topic1-a">Get Topic</a>
+                <div id="tiaa-topic1-results" class="tiaa-message-results-off">Topic div</div>
             </div>
 			<?php
 		}

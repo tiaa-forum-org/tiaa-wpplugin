@@ -173,6 +173,7 @@ class TiaaHooks {
 		$this->register_invite_route();
 		$this->register_discourse_ping_route();
 		$this->register_get_discourse_post_by_id();
+		$this->register_get_discourse_topic_by_id();
 	}
 
 	public function register_discourse_ping_route() :bool {
@@ -288,7 +289,10 @@ class TiaaHooks {
 	 * (see PluginUtil::parse_message(), same convention used by
 	 * WelcomeUtil's welcome-message send and the "Get Message" admin
 	 * preview). With no message, no Post ID, or no marker found, Discourse's
-	 * own default invite template is used.
+	 * own default invite template is used. Similarly, if no topic is
+	 * submitted it falls back to the Topic ID configured for the invite
+	 * group and passes that straight through as the invite's topic_id --
+	 * link-only, no content is fetched or embedded for this one.
 	 *
 	 * @param WP_REST_Request $request The REST API request containing the invitation data.
 	 *
@@ -407,6 +411,8 @@ class TiaaHooks {
 			$req_data['url'] = $cs['url'];
 			$req_data['username'] = $cs['username'];
 			$req_data['api_key'] = $cs['api_key'];
+			// Shared by both the message and topic fallbacks below.
+			$group_options = self::get_options_by_group( $option_group );
 			if (!empty($data['message'])) {
 				$req_data['message'] = $data['message'];
 			} else {
@@ -414,7 +420,6 @@ class TiaaHooks {
 				// Post ID configured for this invite group (InviteSettings /
 				// GroupInviteSettings), if any. Leaving Post ID blank means
 				// Discourse's own default invite template is used instead.
-				$group_options = self::get_options_by_group( $option_group );
 				$post_id = $group_options['post_id'] ?? null;
 				if ( ! empty( $post_id ) ) {
 					$post_result = Discourse::get_discourse_post_by_id( (int) $post_id, $option_group );
@@ -438,6 +443,17 @@ class TiaaHooks {
 			}
 			if (!empty($data['topic'])) {
 				$req_data['topic'] = $data['topic'];
+			} else {
+				// No explicit topic submitted with the form -- fall back to the
+				// Topic ID configured for this invite group, if any. Unlike Post
+				// ID, this is link-only: Discourse's invites.json topic_id param
+				// is passed straight through with no content fetched or embedded
+				// -- the "Get Topic" admin preview is what fetches title/excerpt,
+				// purely so the admin can confirm they've got the right topic.
+				$topic_id = $group_options['topic_id'] ?? null;
+				if ( ! empty( $topic_id ) ) {
+					$req_data['topic'] = $topic_id;
+				}
 			}
 			self::log_info("got discourse invite: " . implode(":", $data) );
 			$request = new WP_REST_Request;
@@ -478,6 +494,51 @@ class TiaaHooks {
 				'callback'             => array( $this, 'get_discourse_post_by_id' ),
 				'args'                 => array(
 					'post_id'      => array(
+						'required'          => true,
+						'validate_callback' => function( $param, $request, $key ) {
+							return is_numeric( $param );
+						},
+					),
+					'option_group' => array(
+						'required'          => true,
+						'validate_callback' => function( $param, $request, $key ) {
+							return is_string( $param );
+
+						},
+					),
+				),
+			),
+			true
+		);
+		return $results;
+	}
+
+	/**
+	 * Registers a REST API route for retrieving Discourse topics by ID.
+	 *
+	 * Backs the "Get Topic" admin preview link on InviteSettings /
+	 * GroupInviteSettings, which fetches a topic's title and OP so the
+	 * admin can confirm a configured Topic ID points at the intended
+	 * discussion before it's used to link an invite.
+	 *
+	 * Same admin-only gating as register_get_discourse_post_by_id() and for
+	 * the same reason: the request uses the site's privileged API
+	 * credentials, so it must not be publicly reachable.
+	 *
+	 * @return bool True if the route was successfully registered, false otherwise.
+	 */
+	public function register_get_discourse_topic_by_id(): bool {
+		$results = register_rest_route(
+			TIAA_HOOK_NAMESPACE,
+			'/get_discourse_topic',
+			array(
+				'methods'              => 'GET',
+				'permission_callback'  => function () {
+					return current_user_can( 'manage_options' );
+				},
+				'callback'             => array( $this, 'get_discourse_topic_by_id' ),
+				'args'                 => array(
+					'topic_id'      => array(
 						'required'          => true,
 						'validate_callback' => function( $param, $request, $key ) {
 							return is_numeric( $param );

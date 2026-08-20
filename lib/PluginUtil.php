@@ -174,6 +174,31 @@ trait PluginUtil {
 	}
 
 	/**
+	 * Retrieves a topic from the Discourse server.
+	 *
+	 * Backs the "Get Topic" admin preview link -- fetches a topic's title
+	 * and first post (OP) using the provided topic ID and connection
+	 * settings for the specified option group.
+	 *
+	 * @since 0.0.19
+	 *
+	 * @param WP_REST_Request $request The REST API request object containing topic ID and option group.
+	 * @return string|WP_Error|WP_REST_Response|array The server's response, topic content, or an error.
+	 */
+	public function get_discourse_topic_by_id(WP_REST_Request $request): string|WP_Error|WP_REST_Response|array {
+		$params = $request->get_params();
+		if ( empty( $params ) || empty( $params['topic_id'] ) || empty( $params['option_group'] ) ) {
+			return new WP_REST_Response(
+				array( 'code' => 'invalid_call', 'message' => 'topic_id and option_group are required' ), 400
+			);
+		}
+		$topic_id = $params['topic_id'];
+		$option_group = $params['option_group'];
+
+		return Discourse::get_discourse_topic_by_id($topic_id, $option_group);
+	}
+
+	/**
 	 * Parses a message to extract a specific section of its content.
 	 *
 	 * This method searches for a marker (`BeginMessage ----`) in a given string

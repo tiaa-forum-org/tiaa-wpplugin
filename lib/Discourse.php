@@ -242,6 +242,33 @@ class Discourse {
 	}
 
 	/**
+	 * Retrieves a topic (title + posts) from the Discourse server given its ID.
+	 *
+	 * Backs the "Get Topic" admin preview link only -- lets an admin confirm
+	 * a configured Topic ID points at the intended discussion. Invite sends
+	 * themselves never call this: Topic ID is passed straight through to
+	 * Discourse's invite API as topic_id, link-only, with no content fetched.
+	 *
+	 * @param int    $topic_id     The ID of the topic to retrieve.
+	 * @param string $option_group The option group whose connection settings to use.
+	 *
+	 * @return WP_REST_Response|WP_Error The retrieved topic or an error object on failure.
+	 */
+	public static function get_discourse_topic_by_id(int $topic_id, string $option_group) : WP_Error | WP_REST_Response {
+		self::log_debug('get_discourse_topic_by_id: '  . $option_group. ': ' . $topic_id);
+		if ( ! $topic_id ) {
+			return new WP_Error( "Missing topic ID." );
+		}
+		$cs = self::get_connection_options_by_group( $option_group );
+		if (is_wp_error($cs)) {
+			return $cs;
+		}
+		$apiEndPoint = '/t/' . $topic_id .'.json';
+
+		return self::getApiResponse($cs['url'],$apiEndPoint, $cs['api_key'], $cs['username'], 'GET' );
+	}
+
+	/**
 	 * Retrieves a list of recently added members from the Discourse server.
 	 *
 	 * Fetches a list of recent members, including optional filters or parameters,

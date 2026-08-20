@@ -28,6 +28,17 @@ window.onload = function() {
 
         });
     });
+// topics
+    const clickableItemsTopic = document.querySelectorAll('.tiaa-topic-discourse-class');
+    clickableItemsTopic.forEach(item => {
+        let divID;
+        divID = item.id;
+        let anchorID = document.getElementById(divID + "-a");
+        anchorID.addEventListener('click', function (event) {
+            event.preventDefault();
+            fetchTopic(event.target.href, event);
+        });
+    });
     // This script is enqueued on every TIAA admin page, but these two
     // elements only exist on the Screened Emails page -- null-check since
     // getElementById() returns null everywhere else.
@@ -143,4 +154,63 @@ function getMessageFromPost(post) {
         return('');
     }
 
+}
+
+// Topic ID is link-only at send time (see TiaaHooks::invite_to_discourse) --
+// this preview exists purely so the admin can confirm a configured Topic ID
+// points at the intended discussion, by showing its title and the first
+// ~20 words of the OP. Nothing fetched here is ever sent in an invite.
+function fetchTopic(ref, event) {
+    fetch(ref)
+        .then(response => response.json())
+        .then(data => {
+            let anchorID = event.target.id;
+            let divResultsID = anchorID.replace(/-a$/,'-results');
+            let divResults = document.getElementById(divResultsID);
+            if (divResults) {
+                divResults.style.display = 'block';
+                if (data['status'] === 200) {
+                    let payload = JSON.parse(data['body_response']);
+                    let title = payload['title'] || '';
+                    let opCooked = payload?.post_stream?.posts?.[0]?.cooked || '';
+                    let excerpt = getExcerptFromCooked(opCooked, 20);
+                    if (!title) {
+                        divResults.style.color = 'red';
+                        divResults.innerHTML = "Couldn't read a title from this topic.";
+                    } else {
+                        divResults.style.color = 'green';
+                        divResults.innerHTML = '<strong>' + title + '</strong><br>' + excerpt;
+                    }
+                } else {
+                    divResults.style.color = 'red';
+                    let obj;
+                    try {
+                        obj = JSON.parse(data['body_response']);
+                        divResults.innerHTML = data['status'] + ': ' + data['response'] + ' - ' + obj.errors;
+                    } catch (error) {
+                        console.log(`JSON parse error - ${error.message}`);
+                        divResults.innerHTML = 'Error processing your request...';
+                    }
+                }
+            }
+        })
+        .catch((error) => {
+            console.log(error.message);
+        });
+}
+
+// Strips HTML tags from Discourse's rendered ("cooked") post content and
+// returns the first wordLimit words, for a plain-text preview excerpt.
+function getExcerptFromCooked(cooked, wordLimit) {
+    if (!cooked) {
+        return '';
+    }
+    const tmp = document.createElement('div');
+    tmp.innerHTML = cooked;
+    const text = (tmp.textContent || tmp.innerText || '').trim();
+    if (!text) {
+        return '';
+    }
+    const words = text.split(/\s+/).filter(Boolean);
+    return words.slice(0, wordLimit).join(' ') + (words.length > wordLimit ? '...' : '');
 }
