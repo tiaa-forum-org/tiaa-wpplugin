@@ -299,7 +299,13 @@ class SettingsValidator {
 	 *
 	 * @since 0.0.3
 	 *
-	 * @param int    $input         The input to be validated.
+	 * @param int|string $input     The input to be validated. Typed to accept
+	 *        string too -- a form field always submits as a string, and a
+	 *        non-numeric one (e.g. someone types "abc") must reach the
+	 *        filter_var() below to be rejected gracefully, rather than
+	 *        crashing on a strict int-only parameter before validation logic
+	 *        ever runs (see the crash this caused when it didn't: git blame
+	 *        this line, 2026-08-20).
 	 * @param string|null $option_id     The identifier for the setting being validated.
 	 * @param int|null $min         Minimum allowed value.
 	 * @param int|null $max         Maximum allowed value.
@@ -307,7 +313,7 @@ class SettingsValidator {
 	 * @param bool   $add_error     Whether to add an error message to the settings API.
 	 * @return int|null The validated integer or null if invalid.
 	 */
-	protected function validate_int( int $input, ?string $option_id = null, ?int $min = null,
+	protected function validate_int( int|string $input, ?string $option_id = null, ?int $min = null,
 		?int $max = null, string $error_message = '', bool $add_error = false ) : ?int {
 		$options = array();
 
