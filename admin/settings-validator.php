@@ -367,10 +367,13 @@ class SettingsValidator {
 	 *
 	 * @since 0.0.3
 	 *
-	 * @param int|null $input The post ID input to validate.
+	 * @param int|string|null $input The post ID input to validate. Always a
+	 *        string in practice -- a blank form field submits as '', never
+	 *        an actual null -- so the type must accept that (see the crash
+	 *        this caused when it didn't: git blame this line, 2026-08-20).
 	 * @return int|string The validated post ID or an empty string if blank.
 	 */
-	public function validate_post_id_blank_ok(int|null $input ) : int|string {
+	public function validate_post_id_blank_ok( int|string|null $input ) : int|string {
 		if ( isset( $input ) && $input != '' ) {
 			return $this->validate_int(
 				$input,
