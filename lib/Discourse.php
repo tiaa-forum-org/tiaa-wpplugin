@@ -167,22 +167,46 @@ class Discourse {
 				$response->set_data($mod_data);
 				self::log_info('parsed duplicate invite for: ' . $data['email']);
 			} else {
+				// Any other 422 (e.g. "custom message is too long") is a genuine
+				// error, not a duplicate. Only double-check via an admin lookup
+				// because Discourse doesn't always word the "already invited"
+				// error the same way -- leave $response untouched (still the
+				// real 422 + Discourse's own error body) unless that lookup
+				// positively confirms an existing account, so a genuine failure
+				// isn't swallowed and misreported as "already a member".
 				// The url checking if the email is already registered must have admin privileges
 				$cs = self::get_connection_options_by_group( TIAA_CONNECT_GROUP );
 				if ($cs['url'] === $url) {
-					$response2 = self::getApiResponse( $url, '/admin/users/list/all.json?email=' . $data['email'],
+					// 'filter' is the parameter Discourse's admin user search
+					// actually matches against (confirmed against wp-discourse's
+					// own get_discourse_user_by_email(), which passes both).
+					// 'email' alone is not a documented/honored filter for this
+					// endpoint -- passing only that silently returned the full,
+					// unfiltered user list, which the bug below then treated as
+					// a match for every email, valid or not.
+					$email_enc = rawurlencode( $data['email'] );
+					$response2 = self::getApiResponse( $url,
+						'/admin/users/list/all.json?email=' . $email_enc . '&filter=' . $email_enc,
 						$cs['api_key'], $cs['username'], 'GET' );
-					// if response2 is valid and a user, then mark email as already a member
 					if ( $response2->get_status() == 200 ) {
-						$data2 = $response2->get_data();
-						if ( empty( $data2 ) ) {
-							self::log_error( 'invite failed: ' . $data['email'] );
-						} else {
+						// get_data() always returns the {success,status,response,
+						// body_response} wrapper -- never empty on a 200 response
+						// -- so checking empty($data2) here always evaluated to
+						// false, marking every lookup as "found" regardless of
+						// its actual content. The real Discourse user list has to
+						// be decoded out of body_response before it means anything.
+						$data2  = $response2->get_data();
+						$users2 = json_decode( $data2['body_response'] ?? '', true );
+						if ( ! empty( $users2 ) && is_array( $users2 ) ) {
 							$mod_data            = $response->get_data();
 							$mod_data['message'] = "already a member";
 							$response->set_data( $mod_data );
 							self::log_info( 'found duplicate invite for: ' . $data['email'] );
+						} else {
+							self::log_error( 'invite failed (not a duplicate): ' . $data['email'] );
 						}
+					} else {
+						self::log_error( 'invite failed, duplicate-check lookup itself failed: ' . $data['email'] );
 					}
 				}
 			}
