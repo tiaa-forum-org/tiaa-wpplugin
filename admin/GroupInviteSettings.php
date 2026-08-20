@@ -197,7 +197,7 @@ class GroupInviteSettings {
 	    );
 	    add_settings_field(
 		    'post_id',
-		    'Discourse message post ID',
+		    'Discourse message post ID - Discourse message post ID, limits the message to 1000 characters',
 		    array(
 			    $this,
 			    'post_id_input'

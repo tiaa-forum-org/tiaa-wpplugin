@@ -159,7 +159,8 @@ class InviteSettings {
             the default connection settings will be used and the invite will be sent from that account.
         <br />
             If there is no Post ID, the default message will be used. If a Post ID is set, the message will be
-            retrieved from the Discourse forum and added to the invitation email.
+            retrieved from the Discourse forum and added to the invitation email. Messages are limited by Discourse
+            to less than 1,000 characters.
         <br />
             If there is no Topic ID, the invite is not linked to a topic. If a Topic ID is set, the invite will
             link to that topic when accepted.
@@ -239,7 +240,7 @@ class InviteSettings {
 		$this->form_helper->input(
 			'post_id',
 			TIAA_INVITE_GROUP,
-			'Invitation Post Message ID - leave blank if not used',
+			'Invitation Post Message ID - leave blank if not used. Message must be less than 1,000 characters.',
 			'number',
 			null,
 			array( 'style' => 'width: 6em;' )
