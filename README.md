@@ -35,18 +35,18 @@ invite manually from inside Discourse's own web UI (confirmed 2026-08-20
 **Process for creating a topic to use as an invite Topic ID** (confirmed
 working 2026-08-20):
 
-1. Create a new topic in the `#public` category.
+1. On Discourse, create a new topic in the `#public` category.
 2. Write the post as you'd want a new invite recipient to see it — this
-   is the first thing they'll land on after accepting.
-3. Once the post is finished, open the topic's settings and change its
-   category to `unlisted`.
+   is the first thing they'll land on after joining.
+3. Once the post is finished, open the topic's settings and change it to
+    to `unlisted`.
 4. Note the topic ID from the URL — that's the value to enter in the
-   Topic ID field on the Signup or Group Invite settings tab.
+   Topic ID field on the Signup or Group Invite settings tab in the topic_id field.
 
 Creating the topic in `#public` first, then moving it to `unlisted`,
 keeps the category's read permission set to "Everyone" — satisfying the
 invite API's visibility check above — while `unlisted` hides the topic
-from search, the topic list, and ordinary browsing. In practice this
+from public search, the topic list, and ordinary browsing (unless the user is a member of the `staff` group). In practice this
 means the topic is only reachable by someone who has the direct link (as
 the invite itself provides), even though it isn't gated by a logged-in-only
 permission the way a normal restricted category would be.
@@ -119,23 +119,33 @@ permission the way a normal restricted category would be.
   call is affected, and it fails the exact same way via the old
   `/wp-login.php?action=logout` link too — this is a pre-existing local-dev
   environment gap, not specific to `/tiaa-logout`. Confirmed working
-  correctly on `test-v3` staging (2026-08-06). See the `xdebug` repo's
+  correctly on `test-v3` staging (2026-08-06). See the WP repo's
   Dockerfile for the equivalent CA-trust fix already prepared for its
   container; `wp-test`'s `Dockerfile.wp-test` doesn't yet have it applied.
 
 ## Installation
 
-1. **Upload the Plugin:**
-    - Download the ZIP file from GitHub or your WordPress admin panel.
-    - Navigate to `Plugins > Add New` and upload the ZIP file.
+1. **Download the plugin ZIP from GitHub Releases** — not the repository's
+   own green "Code > Download ZIP" button. That downloads the entire repo
+   (`bin/`, `docs/`, `CLAUDE.md`, and other development-only files) instead
+   of a clean, installable plugin package.
+    - Always-current link — safe to reuse any time, always resolves to the
+      newest version: [`tiaa-wpplugin.zip`](https://github.com/tiaa-forum-org/tiaa-wpplugin/releases/latest/download/tiaa-wpplugin.zip)
+    - To install a specific older version instead, pick it from the
+      [Releases page](https://github.com/tiaa-forum-org/tiaa-wpplugin/releases)
+      and download that version's `tiaa-wpplugin.zip` asset.
+
+2. **Upload the Plugin:**
+    - In the WordPress admin, go to `Plugins > Add New Plugin > Upload Plugin`.
+    - Choose the downloaded `tiaa-wpplugin.zip` file and click **Install Now**.
     - Click **Activate**.
 
-2. **Configure Settings:**
+3. **Configure Settings:**
     - Go to `Settings > TIAA Plugin` in the WordPress admin panel.
     - Enter the required API keys for Discourse.
     - Adjust settings for invite processing, welcome messages, and webhook responses.
 
-3. **Use the Plugin:**
+4. **Use the Plugin:**
     - The plugin will automatically handle invites, welcome messages, and other functions based on the settings configured.
 
 ## Future Development
