@@ -36,6 +36,12 @@ version=$(grep -m1 "^ \* Version:" "${OLDPWD}/${PACKAGE_NAME}/${PACKAGE_NAME}.ph
 if [ -n "${version}" ]; then
   echo ""
   echo "To publish this as a GitHub release:"
-  echo "  gh release create v${version} ${TIAA_BACKUP_DIR}/${current_date}-${PACKAGE_NAME}.zip \\"
+  # Asset uploaded as "#${PACKAGE_NAME}.zip" (not the timestamped local
+  # filename) so it lands on GitHub as a stable name -- that's what makes
+  # releases/latest/download/${PACKAGE_NAME}.zip work as a permanent
+  # "always current" download link, since that URL resolves by matching
+  # the asset's name against the newest release, not by timestamp.
+  echo "  gh release create v${version} \\"
+  echo "    ${TIAA_BACKUP_DIR}/${current_date}-${PACKAGE_NAME}.zip#${PACKAGE_NAME}.zip \\"
   echo "    --title \"v${version}\" --notes \"...\""
 fi
