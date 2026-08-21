@@ -36,12 +36,13 @@ version=$(grep -m1 "^ \* Version:" "${OLDPWD}/${PACKAGE_NAME}/${PACKAGE_NAME}.ph
 if [ -n "${version}" ]; then
   echo ""
   echo "To publish this as a GitHub release:"
-  # Asset uploaded as "#${PACKAGE_NAME}.zip" (not the timestamped local
-  # filename) so it lands on GitHub as a stable name -- that's what makes
-  # releases/latest/download/${PACKAGE_NAME}.zip work as a permanent
-  # "always current" download link, since that URL resolves by matching
-  # the asset's name against the newest release, not by timestamp.
-  echo "  gh release create v${version} \\"
-  echo "    ${TIAA_BACKUP_DIR}/${current_date}-${PACKAGE_NAME}.zip#${PACKAGE_NAME}.zip \\"
+  # Upload /tmp/${PACKAGE_NAME}.zip (the un-timestamped file built above),
+  # NOT the timestamped backup copy. gh's "path#label" syntax only sets a
+  # cosmetic display label in the release UI -- it does NOT rename the
+  # asset GitHub actually serves, which always matches the uploaded file's
+  # own basename. Uploading the timestamped file (even with a #label)
+  # would still publish it as e.g. 2608211013-${PACKAGE_NAME}.zip, breaking
+  # the releases/latest/download/${PACKAGE_NAME}.zip permanent-link trick.
+  echo "  gh release create v${version} /tmp/${PACKAGE_NAME}.zip \\"
   echo "    --title \"v${version}\" --notes \"...\""
 fi
