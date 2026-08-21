@@ -81,6 +81,41 @@ trait PluginUtil {
 	}
 
 	/**
+	 * Resolves an untrusted, possibly differently-cased group name (e.g.
+	 * submitted by a front-end invite form) to the exact casing configured
+	 * in the "List of Groups" admin field (`TIAA_GROUP_LIST_GROUP`'s
+	 * `group_list`).
+	 *
+	 * `OptionsUtilities::options_init()` builds each group's option-group
+	 * key (`tiaa_group-invite-{name}`) using group_list's exact casing, so
+	 * `get_options_by_group()`/`get_connection_options_by_group()` only
+	 * ever find an entry under that one exact key. If a caller (e.g. an
+	 * Elementor form's `group` field) submits a different case than
+	 * group_list -- even though it may exactly match Discourse's actual
+	 * group slug, which is itself case-sensitive -- the lookup silently
+	 * fails with an opaque "No options" error, and the whole invite is
+	 * rejected outright (confirmed 2026-08-21: reproduced directly by
+	 * mismatching group_list's casing against a real invite submission).
+	 * This has nothing to do with per-group credentials or post access
+	 * despite how that failure can look from the outside.
+	 *
+	 * @since 0.0.20
+	 * @param string $submitted_group Case-insensitive candidate group name.
+	 * @return string|null The exact configured casing, or null if no
+	 *         case-insensitive match exists in the configured group list.
+	 */
+	protected function resolve_configured_group_name( string $submitted_group ): ?string {
+		$group_list_option = self::get_options_by_group( TIAA_GROUP_LIST_GROUP );
+		$configured         = $group_list_option['group_list'] ?? array();
+		foreach ( $configured as $group_name ) {
+			if ( 0 === strcasecmp( $group_name, $submitted_group ) ) {
+				return $group_name;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Creates the full option name for the form `name` fields.
 	 *
 	 * Prepends the option group to the option name with formatting suitable

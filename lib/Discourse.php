@@ -234,6 +234,11 @@ class Discourse {
 		}
 		$cs = self::get_connection_options_by_group( $option_group );
 		if (is_wp_error($cs)) {
+			// Previously silent -- this exact failure (most often a
+			// group-name case mismatch against "List of Groups") looked
+			// like it "just didn't happen" in the log, which made it read
+			// as a credentials/access problem rather than what it was.
+			self::log_wp_error( 'get_discourse_post_by_id', $cs, __FUNCTION__, __CLASS__, __LINE__ );
 			return $cs;
 		}
 		$apiEndPoint = '/posts/' . $post_id .'.json';

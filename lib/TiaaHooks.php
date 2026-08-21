@@ -384,10 +384,30 @@ class TiaaHooks {
 					unset ($data['group']);
 					$option_group = TIAA_INVITE_GROUP;
 				} else {
-					$req_data['group_names'] = $data['group'];
-					// if it's not a valid group, get_connection_options...() will fail
-					// used to be str_tolower() but discourse group slugs are case sensitive
-					$option_group = TIAA_GROUP_INVITE_GROUP . $data['group'];
+					// Resolve against the "List of Groups" admin field rather
+					// than trusting $data['group']'s casing directly -- a
+					// mismatch there (form vs. group_list vs. Discourse's own
+					// case-sensitive slug) previously failed the whole invite
+					// with an opaque "No options" error that looked like a
+					// credentials/access problem but wasn't. See
+					// resolve_configured_group_name()'s docblock (PluginUtil.php).
+					$resolved_group = $this->resolve_configured_group_name( $data['group'] );
+					if ( null === $resolved_group ) {
+						self::log_error( "invite_to_discourse: '" . $data['group'] . "' does not match any configured invite group" );
+						return new WP_REST_Response(
+							array(
+								'code'    => 'unknown_group',
+								'message' => 'Unrecognized invite group.',
+							),
+							400
+						);
+					}
+					// Use the resolved, exactly-configured casing for both the
+					// WP option lookup and Discourse's group_names param --
+					// Discourse group slugs are case-sensitive too, so this
+					// also protects the Discourse-side call, not just ours.
+					$req_data['group_names'] = $resolved_group;
+					$option_group            = TIAA_GROUP_INVITE_GROUP . $resolved_group;
 				}
 			} else {
 				$option_group = TIAA_INVITE_GROUP;
