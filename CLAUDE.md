@@ -256,19 +256,6 @@ add_settings_field). Admin design mirrors the WP-Discourse plugin layout intenti
 
 ---
 
-## Known Issues
-
-**Logger unreliability**
-Logger is not reliably initialized for all `\PluginUtil` call paths — needs auditing.
-(`TIAAFile.php` moved from `vendor_prefixed/` to `lib/` on 2026-08-19 — it's TIAA-specific
-code that never went through the php-prefixer tool and doesn't exist in the upstream
-`analog/analog` package, so leaving it in `vendor_prefixed/` risked silent deletion if
-that tree were ever regenerated. Namespace kept as `TIAAPlugin\Analog\Handler` for a
-minimal diff — no call-site changes needed beyond the `require_once` path in
-`vendor_prefixed/autoload.php`.)
-
----
-
 ## Deployment Notes
 
 - Installed as a standard WP plugin (zip upload or directory copy)
