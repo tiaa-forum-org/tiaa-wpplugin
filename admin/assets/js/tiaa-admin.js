@@ -97,7 +97,6 @@ function fetchMessage(ref, event) {
     fetch(ref)
         .then(response => response.json()) // Parsing the data as JSON
         .then(data => {
-            //                      console.log(data); // Logging data to the console
             let anchorID = event.target.id;
             let divResultsID = anchorID.replace(/-a$/,'-results');
             let divResults = document.getElementById(divResultsID);

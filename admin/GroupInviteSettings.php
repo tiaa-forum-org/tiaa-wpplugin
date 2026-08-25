@@ -343,7 +343,7 @@ class GroupInviteSettings {
         // only display options if post_id has been set
 		if (isset($options['post_id']) && $options['post_id'] > 10) {
 			$hook_url = site_url("/wp-json/tiaa_wpplugin/v1/get_discourse_post/" .
-                    "?post_id={$options['post_id']}&option_group=$option_group_name")
+                    "?post_id={$options['post_id']}&option_group=tiaa_connection")
                 . '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
 			?>
             <div class="wrap tiaa-message-discourse-class" id="tiaa-message-<?php echo $group_name;?>">

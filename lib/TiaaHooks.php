@@ -442,7 +442,13 @@ class TiaaHooks {
 				// Discourse's own default invite template is used instead.
 				$post_id = $group_options['post_id'] ?? null;
 				if ( ! empty( $post_id ) ) {
-					$post_result = Discourse::get_discourse_post_by_id( (int) $post_id, $option_group );
+					// Fetch with the Connection tab's credentials, not the
+					// invite group's -- reading this post has no reason to
+					// require whatever standing (group ownership, category
+					// access, etc.) the group's assigned account happens to
+					// have. The Connection tab's credentials are the one set
+					// guaranteed to have broad read access site-wide.
+					$post_result = Discourse::get_discourse_post_by_id( (int) $post_id, TIAA_CONNECT_GROUP );
 					if ( is_wp_error( $post_result ) || $post_result->get_status() !== 200 ) {
 						self::log_wp_rest_response_error( 'invite message post_id ' . $post_id . ' fetch failed: ',
 							$post_result, __FUNCTION__, __CLASS__, __LINE__ );
@@ -452,7 +458,7 @@ class TiaaHooks {
 						// and the "Get Message" admin preview: only the text after a
 						// "BeginMessage ----" marker line is the actual message -- anything
 						// before it is editorial/setup notes on the Discourse post itself.
-						$message = self::parse_message( $post_json['raw'] ?? null );
+						$message = self::parse_message( $post_json['cooked'] ?? null );
 						if ( ! empty( $message ) ) {
 							$req_data['message'] = $message;
 						} else {
