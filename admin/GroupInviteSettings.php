@@ -285,6 +285,21 @@ class GroupInviteSettings {
 	/**
 	 * Creates username input field for group settings.
 	 *
+	 * IMPORTANT: this account must be a full Discourse Admin, not merely an
+	 * owner of the target group or a Moderator, whenever this group invite
+	 * config includes a group assignment (which it always does here, unlike
+	 * the plain Signup tab). Confirmed via direct testing: Discourse's
+	 * invite API 403s any invite whose payload includes group_names/
+	 * group_ids unless the acting user (Api-Username) is a full Admin --
+	 * group ownership and Moderator/staff status are both insufficient for
+	 * this specific API code path, even though either is sufficient for the
+	 * identical action through Discourse's own web UI, and even though
+	 * Moderator/staff is sufficient for a *plain* (no group) API invite.
+	 * Reported upstream as a likely Discourse bug -- full writeup, repro
+	 * steps, and the meta.discourse.org report link are in tiaa-wpsite-v3's
+	 * docs/project-reference/KnownIssues.md ("Group invite must be sent by
+	 * an admin user").
+	 *
 	 * @since  0.0.3
 	 * @access public
 	 * @param  array $args {
@@ -299,7 +314,7 @@ class GroupInviteSettings {
     	$this->form_helper->input(
 			'username',
 			$option_group_name,
-			'Username - leave blank to use connection default',
+			'Username - leave blank to use connection default. Must be a full Discourse Admin account (owner/moderator is not enough) -- see tiaa-wpsite-v3\'s KnownIssues.md, "Group invite must be sent by an admin user".',
             'username',
             null,
             array("style" => 'width: 10em;')
