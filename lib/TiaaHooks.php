@@ -239,6 +239,57 @@ class TiaaHooks {
 	private const INVITE_RATE_LIMIT_WINDOW = 60;
 
 	/**
+	 * Name of the honeypot form field checked by invite_to_discourse()
+	 * (S1, Fable Pass 2 audit, docs/audits/tiaa-wpplugin-audit.md).
+	 *
+	 * This field must exist on the Elementor invite form (Signup and each
+	 * Group Invite form) as a real field with this exact name, hidden from
+	 * real visitors via CSS (e.g. `position: absolute; left: -9999px;` --
+	 * NOT `display: none` alone, some bots skip fields WordPress/Elementor
+	 * doesn't render but do fill anything present in the DOM regardless of
+	 * CSS). A real visitor never sees or fills it; a form-scraping bot that
+	 * blindly fills every field it finds usually does. Adding the field to
+	 * the Elementor form itself is a page-builder task, not something this
+	 * PHP change can do -- see README.md for the setup steps.
+	 *
+	 * Deliberately not named anything that hints at its purpose (no
+	 * "honeypot"/"spam"/"trap") -- pick a name a bot would plausibly try to
+	 * fill on a signup form, e.g. a fake "website" or "phone" field.
+	 *
+	 * Only screens naive/generic scraping bots, not a targeted attacker who
+	 * inspects the real request and omits this field on purpose -- see
+	 * $email rate limiting below for the defense that still holds against
+	 * that scenario.
+	 *
+	 * @since 0.0.20
+	 */
+	private const INVITE_HONEYPOT_FIELD = 'website';
+
+	/**
+	 * Max invite requests allowed for the same target email within
+	 * INVITE_EMAIL_RATE_LIMIT_WINDOW seconds, regardless of source IP.
+	 *
+	 * Closes the gap the per-IP limit above doesn't cover (S1, Fable Pass 2
+	 * audit): a targeted attacker spreading requests across many IPs, or
+	 * simply staying under the per-IP cap, can otherwise still spam-bomb
+	 * one specific target address with repeated invite emails. This caps
+	 * the same *target*, independent of how many IPs the requests come
+	 * from. 3/day is generous enough for a legitimate retry (e.g. the
+	 * first attempt failed for an unrelated reason) while still stopping
+	 * repeated abuse of one address.
+	 *
+	 * @since 0.0.20
+	 */
+	private const INVITE_EMAIL_RATE_LIMIT_MAX = 3;
+
+	/**
+	 * Rate-limit window, in seconds, for the per-email invite throttle.
+	 *
+	 * @since 0.0.20
+	 */
+	private const INVITE_EMAIL_RATE_LIMIT_WINDOW = DAY_IN_SECONDS;
+
+	/**
 	 * Returns true if the requesting IP has exceeded the invite rate limit.
 	 *
 	 * Basic per-IP throttle (SECURITY-REVIEW.md F6) against an anonymous
@@ -273,6 +324,38 @@ class TiaaHooks {
 			return true;
 		}
 		set_transient( $key, $count + 1, self::INVITE_RATE_LIMIT_WINDOW );
+		return false;
+	}
+
+	/**
+	 * Returns true if the target email has already received
+	 * INVITE_EMAIL_RATE_LIMIT_MAX invites within INVITE_EMAIL_RATE_LIMIT_WINDOW.
+	 *
+	 * Companion to invite_rate_limit_exceeded() (S1, Fable Pass 2 audit) --
+	 * that one buckets by source IP, this one buckets by target email, so
+	 * the same address can't be repeatedly mailed regardless of how many
+	 * IPs the requests come from. Lowercased/trimmed before hashing since
+	 * email local-parts are case-sensitive in the RFC but essentially
+	 * never in practice -- without normalizing, "Foo@x.com" and "foo@x.com"
+	 * would bucket separately and the limit would be trivially bypassable.
+	 *
+	 * @since 0.0.20
+	 * @param string $email The target email address from the invite request.
+	 * @return bool
+	 */
+	private function invite_email_rate_limit_exceeded( string $email ): bool {
+		$normalized = strtolower( trim( $email ) );
+		if ( empty( $normalized ) ) {
+			// No email to key on -- the "missing name or email" check right
+			// after this runs regardless, so failing open here isn't a gap.
+			return false;
+		}
+		$key   = 'tiaa_invite_email_rl_' . md5( $normalized );
+		$count = (int) get_transient( $key );
+		if ( $count >= self::INVITE_EMAIL_RATE_LIMIT_MAX ) {
+			return true;
+		}
+		set_transient( $key, $count + 1, self::INVITE_EMAIL_RATE_LIMIT_WINDOW );
 		return false;
 	}
 
@@ -346,6 +429,24 @@ class TiaaHooks {
 			}
 			self::log_debug("got invite_to_discourse2: " . self::array_to_string($data) );
 		}
+
+		// Honeypot (S1, Fable Pass 2 audit): a hidden Elementor form field a
+		// real visitor never sees or fills, but a generic form-scraping bot
+		// that blindly fills every field it finds usually does. Respond as
+		// if this were a genuine success -- same reasoning as the screened-
+		// email branch below: a distinguishable rejection would let a
+		// prober learn the defense exists and work around it.
+		if ( ! empty( $data[ self::INVITE_HONEYPOT_FIELD ] ) ) {
+			self::log_notice( 'invite honeypot field populated -- treating as bot, silently no-op' );
+			return rest_ensure_response( new WP_REST_Response(
+				array(
+					'success'       => true,
+					'status'        => 200,
+					'response'      => 'OK',
+					'body_response' => '{}',
+				), 200 ) );
+		}
+
 	// Check if the required data (name and email) is present
 		if ( empty( $data['name'] ) ||  ($data['name'] == '') ||
 		     empty( $data['email'] ) ) {
@@ -355,6 +456,17 @@ class TiaaHooks {
 			self::log_wp_rest_response_error( $msg, $return_err, __FUNCTION__, __CLASS__, __LINE__ );
 			return $return_err;
 		} else {
+			if ( $this->invite_email_rate_limit_exceeded( $data['email'] ) ) {
+				self::log_notice( 'invite email rate limit exceeded for ' . $data['email'] );
+				return new WP_REST_Response(
+					array(
+						'success' => false,
+						'code'    => 'rate_limited',
+						'message' => 'Too many requests. Please try again shortly.',
+					),
+					429
+				);
+			}
 			if ( $this->screen->is_screened_email($data['email']) === true) {
 				self::log_debug($data['email'] . " is a screened email");
 				// Uniform response (SECURITY-REVIEW.md F6, hardened per N2 in the

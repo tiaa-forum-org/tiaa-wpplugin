@@ -51,6 +51,46 @@ means the topic is only reachable by someone who has the direct link (as
 the invite itself provides), even though it isn't gated by a logged-in-only
 permission the way a normal restricted category would be.
 
+#### Setting up the invite form's honeypot field
+
+The `/invite` REST endpoint is intentionally public (anonymous visitors
+submit it), which makes it a target for form-scraping spam bots. As one
+layer of defense, the plugin checks for a hidden **honeypot** field named
+`website` on the submitted form — see `TiaaHooks::INVITE_HONEYPOT_FIELD`'s
+docblock for the full reasoning. This field has to be added on the
+Elementor side; it can't be added by a code change alone.
+
+**To set it up, on each Elementor invite form (Signup and every Group
+Invite form):**
+
+1. Add a new text field to the form with the exact field ID/name `website`
+   (or change `TiaaHooks::INVITE_HONEYPOT_FIELD` to match a different name —
+   just keep the two in sync).
+2. In the field's Advanced settings, add a custom CSS class (e.g.
+   `tiaa-hp`), then add this rule to the site's custom CSS:
+   ```css
+   .tiaa-hp { position: absolute; left: -9999px; top: -9999px; }
+   ```
+   Use `position: absolute` off-screen, not `display: none` — some bots
+   skip fields hidden that way but still fill anything present in the DOM
+   regardless of CSS visibility.
+3. Leave the field optional/unvalidated in Elementor — a real visitor
+   should never interact with it at all, and its presence with any value
+   is what marks a submission as a bot.
+
+A real visitor never sees or fills this field, so it stays empty on every
+genuine submission. A submission that arrives with it populated is
+treated as a bot and gets a normal-looking success response with no
+Discourse API call made — see the honeypot section of
+`TiaaHooks::invite_to_discourse()` for why the response is disguised
+rather than an explicit rejection.
+
+**Limitation:** this only screens naive, generic scraping bots that
+blindly fill every field they find. It does not stop a targeted attacker
+who inspects the real request and simply omits the field — the per-email
+invite rate limit (`TiaaHooks::INVITE_EMAIL_RATE_LIMIT_MAX`) is the
+defense that still holds against that case.
+
 ### 2. **Welcome Message Automation**
 - Sends personalized Discourse messages to new users.
 - Helps onboard members by explaining key features of the forum.
