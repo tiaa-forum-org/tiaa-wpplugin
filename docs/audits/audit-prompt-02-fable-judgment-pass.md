@@ -24,10 +24,6 @@ CONTEXT YOU SHOULD KNOW:
   escalation through a broken-access-control REST endpoint (OWASP API5:2023), 
   leading to malicious plugin installation. Attacker IP 129.121.77.134, C2 
   domain rakuten64jp.click. A clean rebuild was done from backup.
-- A hash_equals() timing side-channel was already identified in SSO/webhook HMAC 
-  verification (flagged in the Pass 1 map) — confirm it, characterize its actual 
-  exploitability, and don't treat it as the only finding of its kind; look for 
-  similar patterns elsewhere.
 - WP SimplePay/Stripe is NOT part of this plugin — don't flag its absence as a gap.
 - Volunteer-maintainability is a hard constraint: a fix that's technically 
   cleaner but unreadable to a WP-comfortable-but-not-expert maintainer is a 
