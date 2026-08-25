@@ -257,7 +257,18 @@ class WelcomeUtil {
 		$max_days     = is_numeric( $raw_max ) ? (int) $raw_max : $no_max_days;
 		$unit_seconds = $this->get_interval_seconds();
 
-		$post_id = $this->options['post_id'];
+		// Same TypeError risk as days_since_joined_min/max above: a blanked
+		// "Welcome Post ID" field saves as '' and Discourse::get_discourse_post_by_id()
+		// requires a strictly-typed int. Unlike min/max there's no sane default
+		// to substitute -- without a real post to send, this cron run can't do
+		// its job -- so skip the run instead of crashing.
+		$post_id = $this->options['post_id'] ?? '';
+		if ( ! is_numeric( $post_id ) ) {
+			self::log_error( 'Welcome cron: post_id is not set or invalid -- skipping this run.' );
+
+			return;
+		}
+		$post_id         = (int) $post_id;
 		$group_list      = $this->options['group_list'];
 		self::log_debug( 'Running welcome cron- > min days:' . $min_days . ' max days:' . $max_days  );
 		// Fetch recent members from Discourse API

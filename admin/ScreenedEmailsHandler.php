@@ -87,33 +87,6 @@ class ScreenedEmailsHandler {
 
 		// Render the view.
 		include_once plugin_dir_path( __FILE__ ) . '/views/screened-emails-view.php';
-
-		register_setting(
-			TIAA_SCREENED_EMAIL_GROUP,
-			TIAA_SCREENED_EMAIL_GROUP,
-			array(
-				$this->validate_options(),
-			)
-		);
-	}
-
-	/**
-	 * Validates the screened emails options.
-	 *
-	 * Adds validation errors to the WordPress settings API if the input data
-	 * does not meet the required format or constraints.
-	 *
-	 * @since 0.0.3
-	 * @return bool Always returns false to indicate validation is incomplete for now.
-	 */
-	private function validate_options()  {
-		add_settings_error(
-			'tiaa_wpplugin_options',
-			'url',
-			'The Discourse URL needs to be set to a valid URL that begins with either \'http:\' or \'https:\'.'
-		);
-
-		return false;
 	}
 
 	/**
