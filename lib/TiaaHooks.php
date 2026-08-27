@@ -245,12 +245,20 @@ class TiaaHooks {
 	 * This field must exist on the Elementor invite form (Signup and each
 	 * Group Invite form) as a real field with this exact name, hidden from
 	 * real visitors via CSS (e.g. `position: absolute; left: -9999px;` --
-	 * NOT `display: none` alone, some bots skip fields WordPress/Elementor
-	 * doesn't render but do fill anything present in the DOM regardless of
-	 * CSS). A real visitor never sees or fills it; a form-scraping bot that
-	 * blindly fills every field it finds usually does. Adding the field to
-	 * the Elementor form itself is a page-builder task, not something this
-	 * PHP change can do -- see README.md for the setup steps.
+	 * NOT `display: none`, see below). A real visitor never sees or fills
+	 * it; a form-scraping bot that blindly fills every field it finds
+	 * usually does. Adding the field to the Elementor form itself is a
+	 * page-builder task, not something this PHP change can do -- see
+	 * README.md for the setup steps.
+	 *
+	 * DELIBERATELY NOT Elementor Pro's built-in "Honeypot" field type
+	 * (checked 2026-08-27): that field type renders with an inline
+	 * `style="display:none !important"` attribute, hardcoded, with no way
+	 * to style it differently. `display:none` is the textbook honeypot
+	 * tell -- it's specifically what honeypot-aware scrapers check for and
+	 * skip filling, which defeats the whole point. A manually-added plain
+	 * text field, hidden by positioning it off-screen instead (not
+	 * `display:none`), doesn't carry that widely-recognized fingerprint.
 	 *
 	 * Deliberately not named anything that hints at its purpose (no
 	 * "honeypot"/"spam"/"trap") -- pick a name a bot would plausibly try to

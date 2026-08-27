@@ -60,6 +60,15 @@ layer of defense, the plugin checks for a hidden **honeypot** field named
 docblock for the full reasoning. This field has to be added on the
 Elementor side; it can't be added by a code change alone.
 
+**Do not use Elementor Pro's built-in "Honeypot" field type.** Checked
+2026-08-27: that field type renders with a hardcoded
+`style="display:none !important"` attribute, with no way to style it
+differently. `display:none` is the textbook honeypot tell — it's exactly
+what a honeypot-aware scraper checks for and skips filling, which defeats
+the purpose entirely. Use a regular text field instead, hidden by
+positioning it off-screen (see step 2 below) rather than hiding it via
+`display:none` — that doesn't carry the same widely-recognized fingerprint.
+
 **To set it up, on each Elementor invite form (Signup and every Group
 Invite form):**
 
