@@ -236,7 +236,7 @@ class GroupInviteSettings {
 	public function invite_to_forum(array $args) : void {
 		?>
         <p class="invite_to_forum_section_tab">
-            These settings determine how our invitation system works for the <?php echo $args['group_name']; ?> group.
+            These settings determine how our invitation system works for the <?php echo esc_html( $args['group_name'] ); ?> group.
         </p>
 		<?php
 	}
@@ -322,9 +322,9 @@ class GroupInviteSettings {
         $hook_url = site_url("/wp-json/tiaa_wpplugin/v1/tiaa_discourse_ping?option_group=$option_group_name")
             . '&_wpnonce=' . wp_create_nonce( 'wp_rest' );
 		?>
-        <div class="wrap tiaa-ping-discourse-class" id="tiaa-ping-<?php echo $args['group_name'];?>">
-            <a href="<?php echo $hook_url ?>"  id="tiaa-ping-<?php echo $args['group_name'];?>-a" >Ping test</a>
-            <div id="tiaa-ping-<?php echo $args['group_name'];?>-results" class="tiaa-ping-results">ping results</div>
+        <div class="wrap tiaa-ping-discourse-class" id="tiaa-ping-<?php echo esc_attr( $args['group_name'] );?>">
+            <a href="<?php echo esc_url( $hook_url ); ?>"  id="tiaa-ping-<?php echo esc_attr( $args['group_name'] );?>-a" >Ping test</a>
+            <div id="tiaa-ping-<?php echo esc_attr( $args['group_name'] );?>-results" class="tiaa-ping-results">ping results</div>
         </div>
         <?php
 	}

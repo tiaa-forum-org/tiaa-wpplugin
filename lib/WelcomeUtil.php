@@ -126,6 +126,16 @@ class WelcomeUtil {
 	 * @since 0.0.3
 	 */
 	private function create_log_table( wpdb $wpdb ): ?array {
+		// Guard with a SHOW TABLES check (same pattern as
+		// ScreenEmailsUtil::create_table()) rather than running dbDelta()'s
+		// schema comparison on every request -- this constructor runs
+		// unconditionally on init (front-end included, see TiaaBase.php),
+		// so without this guard every anonymous page view paid for a
+		// dbDelta() call against a table that essentially never changes.
+		if ( $wpdb->get_var( "SHOW TABLES LIKE '$this->table_name'" ) === $this->table_name ) {
+			return null;
+		}
+
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE IF NOT EXISTS $this->table_name (
@@ -495,9 +505,6 @@ class WelcomeUtil {
 	 */
 	public function get_recent_log_entries( int $limit ) : ?array {
 		// Query the database table for the latest entries.
-		if ( $this === null ) {
-			return null;
-		}
 		$query = $this->wpdb->prepare(
 			"SELECT member_id, username, email, group_name, date_created, date_processed, status 
         FROM {$this->table_name}

@@ -230,7 +230,7 @@ class Discourse {
 	public static function get_discourse_post_by_id(int $post_id, string $option_group) : WP_Error | WP_REST_Response {
 		self::log_debug('get_discourse_post_by_id: '  . $option_group. ': ' . $post_id);
 		if ( ! $post_id ) {
-			return new WP_Error( "Missing post ID." );
+			return new WP_Error( 'missing_post_id', 'Missing post ID.' );
 		}
 		$cs = self::get_connection_options_by_group( $option_group );
 		if (is_wp_error($cs)) {
@@ -262,7 +262,7 @@ class Discourse {
 	public static function get_discourse_topic_by_id(int $topic_id, string $option_group) : WP_Error | WP_REST_Response {
 		self::log_debug('get_discourse_topic_by_id: '  . $option_group. ': ' . $topic_id);
 		if ( ! $topic_id ) {
-			return new WP_Error( "Missing topic ID." );
+			return new WP_Error( 'missing_topic_id', 'Missing topic ID.' );
 		}
 		$cs = self::get_connection_options_by_group( $option_group );
 		if (is_wp_error($cs)) {

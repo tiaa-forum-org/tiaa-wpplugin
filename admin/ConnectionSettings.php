@@ -187,7 +187,7 @@ class ConnectionSettings {
 		$hook_url = site_url() . '/wp-json/tiaa_wpplugin/v1/tiaa_discourse_ping?option_group=tiaa_connection';
 		?>
         <div class="wrap tiaa-ping-discourse-class" id="tiaa-ping1">
-            <a href='<?php echo $hook_url; ?>' id="tiaa-ping1-a">Ping test</a>
+            <a href='<?php echo esc_url( $hook_url ); ?>' id="tiaa-ping1-a">Ping test</a>
             <div id="tiaa-ping1-results" class="tiaa-ping-results">ping results</div>
         </div>
 		<?php

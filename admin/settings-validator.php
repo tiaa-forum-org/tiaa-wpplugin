@@ -161,7 +161,14 @@ class SettingsValidator {
 	 * @return string The sanitized API key or an empty string if validation fails.
 	 */
 	public function validate_api_key( string $input ) : string {
-		$regex = '/^\s*([0-9]*[a-z]*|[a-z]*[0-9]*)*\s*$/';
+		// Linear, anchored check -- the previous pattern's nested
+		// quantifier over an alternation ((...)* wrapping *-quantified
+		// classes) is the classic catastrophic-backtracking shape (B7,
+		// Fable Pass 2 audit), and it silently rejected any key containing
+		// uppercase letters. Discourse API keys are lowercase hex today,
+		// but there's no reason to bake that assumption into a fragile
+		// regex when a simple alnum check covers the real requirement.
+		$regex = '/^[a-z0-9]+$/i';
 
 		if ( empty( $input ) ) {
 			add_settings_error(
@@ -254,7 +261,14 @@ class SettingsValidator {
 	 * @return string The validated or sanitized API key, or an empty string if invalid/blank.
 	 */
 	public function validate_api_key_blank_ok( string $input ) : string {
-		$regex = '/^\s*([0-9]*[a-z]*|[a-z]*[0-9]*)*\s*$/';
+		// Linear, anchored check -- the previous pattern's nested
+		// quantifier over an alternation ((...)* wrapping *-quantified
+		// classes) is the classic catastrophic-backtracking shape (B7,
+		// Fable Pass 2 audit), and it silently rejected any key containing
+		// uppercase letters. Discourse API keys are lowercase hex today,
+		// but there's no reason to bake that assumption into a fragile
+		// regex when a simple alnum check covers the real requirement.
+		$regex = '/^[a-z0-9]+$/i';
 		$input = trim( $input );
 
 		if ( empty( $input ) ) {

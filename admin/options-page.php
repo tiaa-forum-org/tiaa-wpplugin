@@ -210,7 +210,7 @@ class OptionsPage {
                     if ($group_list && is_array($group_list)) {
                             foreach ($group_list as $group_array) {
                                 foreach( $group_array as $group) {
-                                    echo '<hr><h3>Group: ' . $group . '</h3>';
+                                    echo '<hr><h3>Group: ' . esc_html( $group ) . '</h3>';
                                     $option_group = TIAA_GROUP_INVITE_GROUP . $group;
                                     ?>
                                     <form action="options.php" method="post" class="tiaa-wpplugin-options-form">
