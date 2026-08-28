@@ -21,7 +21,7 @@ endpoint as an email relay** (S1), not an access-control hole.
 Ordered per the prompt: incident-pattern items (REST access control, unauthenticated
 state change) first, then correctness bugs.
 
-### S1 — Public `/invite` endpoint is an anonymous email-relay surface — **High**
+### S1 — Public `/invite` endpoint is an anonymous email-relay surface — **High** — RESOLVED 2026-08-27 (`1508731`, honeypot + per-email throttle; live-verified in production)
 
 `lib/TiaaHooks.php:207-224` registers `POST /tiaa_wpplugin/v1/invite` with
 `permission_callback => '__return_true'`. This is intentional (anonymous Elementor
@@ -78,7 +78,7 @@ by measuring latency. Accepted residual; documenting it here for completeness.
 If ever fixed, the cheap approach is to route the screened branch through the
 same code path length (or a small random delay), not to remove the uniform body.
 
-### S4 — Screened-email thresholds and alert address are configured but never enforced — **Medium**
+### S4 — Screened-email thresholds and alert address are configured but never enforced — **Medium** — RESOLVED 2026-08-28 (`e886cf3`/`8bc2314`, deleted the dead fields rather than implementing the missing alert)
 
 `admin/ScreenedEmailsSettings.php:114-150` renders admin fields for
 `email_list` ("Email(s) for Warnings"), `max_hits_per_email`, `max_total_hits`,
@@ -102,7 +102,7 @@ readable addition; or (b) if the team doesn't want the feature, delete the four
 dead fields so the admin UI doesn't promise something absent. Given volunteer
 maintainability, (b) is the lower-risk call unless the alert is actually wanted.
 
-### B1 — Screened-emails settings registered with an *invoked* validator, firing a spurious error every page load — **Medium**
+### B1 — Screened-emails settings registered with an *invoked* validator, firing a spurious error every page load — **Medium** — RESOLVED 2026-08-25 (`effe9be`)
 
 `admin/ScreenedEmailsHandler.php:91-97`:
 
@@ -129,7 +129,7 @@ group — the handler shouldn't be registering settings at all.
 `ScreenedEmailsSettings` class already owns it), and delete the misleading
 `validate_options()` method. Small, no deployment risk.
 
-### B2 — Welcome cron fatals if "Welcome Post ID" is blanked — **Medium**
+### B2 — Welcome cron fatals if "Welcome Post ID" is blanked — **Medium** — RESOLVED 2026-08-25 (`effe9be`)
 
 `lib/WelcomeUtil.php:260` reads `$post_id = $this->options['post_id'];` with no
 cast, then `:273` passes it to
@@ -146,7 +146,7 @@ field.
 `$post_id = is_numeric( $this->options['post_id'] ?? '' ) ? (int) $this->options['post_id'] : 0;`
 and bail with a logged error when it's 0. Small.
 
-### B3 — `WP_Error` constructed with the message in the code slot — **Low**
+### B3 — `WP_Error` constructed with the message in the code slot — **Low** — RESOLVED 2026-08-28 (`c875105`)
 
 `lib/Discourse.php:233` `return new WP_Error( "Missing post ID." );` and `:265`
 `return new WP_Error( "Missing topic ID." );`. `WP_Error::__construct()` takes
@@ -156,7 +156,7 @@ human sentence and whose *message* is empty. Any caller that logs
 message. Cosmetic but actively unhelpful during debugging. Fix: pass a short code
 plus the message, e.g. `new WP_Error( 'missing_post_id', 'Missing post ID.' )`.
 
-### B4 — Unescaped output in admin ping/preview links and group headings — **Low**
+### B4 — Unescaped output in admin ping/preview links and group headings — **Low** — RESOLVED 2026-08-28 (`c875105`)
 
 Most `$hook_url` echoes use `esc_url()`, but three do not:
 `admin/ConnectionSettings.php:190` (`echo $hook_url` in the Ping test anchor),
@@ -168,14 +168,14 @@ in "List of Groups"), so exploitability is low, but it's inconsistent with the
 rest of the file and a WPCS escaping violation. Fix: `esc_url()` the hrefs,
 `esc_html()` the group names.
 
-### B5 — Dead null-check on `$this` — **Low**
+### B5 — Dead null-check on `$this` — **Low** — RESOLVED 2026-08-28 (`c875105`)
 
 `lib/WelcomeUtil.php:487` `if ( $this === null ) { return null; }` inside the
 non-static instance method `get_recent_log_entries()`. `$this` can never be null
 in that context; the branch is unreachable and misleads a reader into thinking a
 null-instance path exists. Delete it.
 
-### B6 — `dbDelta()` runs on every front-end page load — **Low**
+### B6 — `dbDelta()` runs on every front-end page load — **Low** — RESOLVED 2026-08-28 (`c875105`)
 
 `WelcomeUtil` is instantiated unconditionally in `lib/TiaaBase.php:92` (on `init`,
 front-end included), and its constructor calls `create_log_table()`
@@ -190,7 +190,7 @@ the `dbDelta()` call behind a `SHOW TABLES` check like `ScreenEmailsUtil` does,
 or behind an `is_admin() || wp_doing_cron()` condition since the table is only
 written by cron and read by admin.
 
-### B7 — API-key validation regex is ReDoS-shaped and rejects uppercase — **Low**
+### B7 — API-key validation regex is ReDoS-shaped and rejects uppercase — **Low** — RESOLVED 2026-08-28 (`c875105`)
 
 `admin/settings-validator.php:164` (and its `_blank_ok` twin, `:257`):
 `'/^\s*([0-9]*[a-z]*|[a-z]*[0-9]*)*\s*$/'`. The nested-quantifier group
