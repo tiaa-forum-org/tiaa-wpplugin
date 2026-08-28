@@ -66,6 +66,12 @@ names the fix if it's ever revisited (gate on
 Low only because a forced logout during an active session is mildly disruptive;
 no action needed unless it's being weaponized.
 
+**Re-checked 2026-08-28** (against current code, not just this writeup): still
+accurate. `TiaaLogoutRoute::maybe_handle_logout()` still has no nonce/origin
+check, the docblock still documents the trade-off, `referred_from_discourse()`
+is still present. No code has touched this route since the audit ran. Still
+correctly accepted, no action taken.
+
 ### S3 — Screened-email probe: timing side channel — **Low**
 
 `lib/TiaaHooks.php:358-380` returns a synthetic success body for a screened
@@ -77,6 +83,21 @@ Discourse. An attacker can still learn whether an address is on the screen list
 by measuring latency. Accepted residual; documenting it here for completeness.
 If ever fixed, the cheap approach is to route the screened branch through the
 same code path length (or a small random delay), not to remove the uniform body.
+
+**Re-checked 2026-08-28**, after the S1 fix landed: the screened-email branch
+itself is unchanged (now `lib/TiaaHooks.php:478-499`), same synthetic
+immediate response, same timing gap vs. a real invite -- still accurate,
+still correctly accepted. One addition the original pass couldn't have seen:
+S1's new per-email rate limiter (`invite_email_rate_limit_exceeded()`,
+`:467-477`) now runs immediately before this check. It's local (WP
+transients, no network call) so it doesn't change *this* timing gap either
+way, but it introduces its own small, new, distinguishable oracle -- 4
+invite attempts to the same target email in a day gets a visible `429
+rate_limited` on the 4th, distinguishable from both a real invite and a
+screened-email response. That reveals "this address has recent invite
+activity," not screening status -- materially lower sensitivity than this
+finding's original concern, and not judged worth fixing. Noted for
+completeness, not filed as a new finding.
 
 ### S4 — Screened-email thresholds and alert address are configured but never enforced — **Medium** — RESOLVED 2026-08-28 (`e886cf3`/`8bc2314`, deleted the dead fields rather than implementing the missing alert)
 
