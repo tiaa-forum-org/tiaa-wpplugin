@@ -24,7 +24,6 @@ if ( is_admin() ) {
 	require_once __DIR__ . '/settings-validator.php';
 	require_once __DIR__ . '/LogSettings.php';
 	require_once __DIR__ . '/GroupInviteSettings.php';
-	require_once __DIR__ . '/ScreenedEmailsSettings.php';
 	require_once __DIR__ . '/ScreenedEmailsHandler.php';
 	require_once __DIR__ . '/WelcomeSettings.php';
 	require_once __DIR__ . '/WelcomeDataHandler.php';
@@ -39,7 +38,6 @@ if ( is_admin() ) {
 	new InviteSettings( $form_helper );
 	new LogSettings( $form_helper );
 	new GroupInviteSettings( $form_helper );
-	new ScreenedEmailsSettings( $form_helper );
 	new WelcomeSettings( $form_helper );
 	new SettingsValidator();
 

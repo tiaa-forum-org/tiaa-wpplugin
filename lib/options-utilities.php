@@ -54,13 +54,18 @@ class OptionsUtilities {
 				'file_path' => '/tmp/tiaa-wpplugin.log',
 				'log_level' => 5,
 			),
-		TIAA_SCREENED_EMAIL_GROUP =>
-			array(
-				'email_list'          => array('<EMAIL>'),
-				'max_hits_per_email'  => 100,
-				'max_hits_per_day'    => 10,
-				'max_total_hits'      => 1000,
-			),
+		// Deliberately empty (S4, Fable Pass 2 audit, docs/audits/tiaa-wpplugin-audit.md):
+		// this group previously defaulted email_list/max_hits_per_email/
+		// max_hits_per_day/max_total_hits fields that were configurable in the
+		// admin UI (ScreenedEmailsSettings, since removed) but never read by
+		// anything -- ScreenEmailsUtil::is_screened_email() tracks hit_count
+		// but never compared it to a threshold or emailed an alert. Removed
+		// rather than implemented, since the alert feature was never wanted
+		// enough to build the missing half; the empty group key is kept only
+		// because the TIAA_SCREENED_EMAIL_GROUP constant is still referenced
+		// elsewhere (settings-validator.php's generic email validators,
+		// ScreenedEmailsHandler's add_settings_section() call).
+		TIAA_SCREENED_EMAIL_GROUP => array(),
 		TIAA_WELCOME_GROUP =>
 			array(
 				'url'                    => '',

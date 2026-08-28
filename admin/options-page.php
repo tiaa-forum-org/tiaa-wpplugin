@@ -159,6 +159,7 @@ class OptionsPage {
 				// 'group-signup', 'email-screen' have multiple forms on one page, handled differently.
                 self::log_debug("options page: tab is: $tab");
                 if ( 'group-signup' != $tab && 'site_settings' != $tab ) {
+				if ( 'screened_emails' != $tab ) {
 				?>
 				<form action="options.php" method="post" class="tiaa-wpplugin-options-form">
 					<?php
@@ -174,10 +175,6 @@ class OptionsPage {
 						settings_fields( TIAA_LOGGING_GROUP );
 						do_settings_sections( TIAA_LOGGING_GROUP );
 					}
-					if ( 'screened_emails' === $tab ) {
-						settings_fields( TIAA_SCREENED_EMAIL_GROUP );
-						do_settings_sections( TIAA_SCREENED_EMAIL_GROUP );
-					}
 					if ( 'welcome_message' === $tab ) {
 						settings_fields( TIAA_WELCOME_GROUP );
 						do_settings_sections( TIAA_WELCOME_GROUP );
@@ -186,6 +183,7 @@ class OptionsPage {
                     ?>
 				</form>
             <?php
+				} // if ( 'screened_emails' != $tab ) -- no settings fields left to save (S4, Fable Pass 2 audit)
 				    if ( 'screened_emails' === $tab ) {
                         if (self::$screened_emails_handler === null) {
 	                        self::$screened_emails_handler = new ScreenedEmailsHandler();
